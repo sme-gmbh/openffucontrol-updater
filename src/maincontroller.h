@@ -7,6 +7,7 @@
 
 #include "intelhexparser.h"
 #include "modbushandler.h"
+#include "openffucontrolocuhandler.h"
 
 class MainController : public QObject
 {
@@ -17,10 +18,15 @@ public:
 
 private:
     ModbusHandler* m_modbushandler;
+    OpenFFUcontrolOCUhandler* m_ocuHandler;
 
+    quint8 functionCode;
     bool isDryRun;
     QString modbusInterface;
     QString pathToHexfile;
+    QByteArray payload;
+    quint8 slaveId;
+    QString deviceType;
 
     void parseArguments(QStringList arguments);
     void executeArguments();

@@ -11,7 +11,8 @@ SOURCES += \
         intelhexparser.cpp \
         main.cpp \
         maincontroller.cpp \
-        modbushandler.cpp
+        modbushandler.cpp \
+        openffucontrolocuhandler.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -23,4 +24,5 @@ LIBS     += -lmodbus
 HEADERS += \
     intelhexparser.h \
     maincontroller.h \
-    modbushandler.h
+    modbushandler.h \
+    openffucontrolocuhandler.h

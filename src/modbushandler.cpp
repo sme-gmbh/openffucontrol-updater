@@ -60,6 +60,19 @@ void ModbusHandler::setSlaveAddress(quint16 adr)
     }
     modbus_set_slave(m_bus, adr);
 }
+// returns -1 if error occurs, else total length of message sent
+int ModbusHandler::sendRawRequest(QByteArray request)
+{
+    if (m_isDryRun == true){
+        fprintf(stderr, "ModbusHandler::sendRawRequest(): DRY RUN: 0x%s.\n", request.toHex().data());
+        return -1;
+    }
+
+    int requestLength = modbus_send_raw_request(m_bus, (unsigned char*)request.constData(), request.length());
+    modbus_receive_confirmation(m_bus, (uint8_t*)MODBUS_RTU_MAX_ADU_LENGTH);
+
+    return requestLength;
+}
 
 //void ModbusHandler::slot_writeHoldingRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg, quint16 rawdata)
 //{

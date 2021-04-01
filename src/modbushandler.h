@@ -16,20 +16,7 @@ public:
     bool open();
     void close();
     void setSlaveAddress(quint16 adr);
-
-    typedef enum {
-        OCU_AUX_EEPROM_ERASE= 65,
-        OCU_AUX_EEPROM_WRITE = 66,
-        OCU_AUX_EEPROM_READ  = 67,
-        OCU_INT_FLASH_ERASE  = 68,
-        OCU_COPY_EEPROM_TO_FLASH = 69,
-        OCU_INT_FLASH_READ = 70,
-        OCU_STATUS_READ = 71,   // ACK if system is not busy
-        OCU_BOOT_APPLICATION = 72,
-        OCU_INT_EEPROM_READ = 100,
-        OCU_INT_EEPROM_WRITE = 101,
-
-    } OCUfunctionCodes;
+    int sendRawRequest(QByteArray request);
 
 signals:
 
