@@ -5,17 +5,21 @@ IntelHexParser::IntelHexParser(QObject *parent) : QObject(parent)
 {
 
 }
-
+// writes the program content of the hex file into the QByteArray program
 bool IntelHexParser::parse(QString file)
 {
     fprintf(stdout, "Parsing hexfile\n");
-    qDebug() << "IntelHexParser start parse";
+
     intelHexLine parsedLine;
     QString line;
     QByteArray buffer;
 
-    if(filePath.isEmpty())
-        return 0;
+    quint16 extendetSegmentAddress = 0;
+
+    quint64 extendetLinearAddress = 0;
+
+    if(file.isEmpty())
+        return 1;
 
     QFile hexFile(file);
 
@@ -24,9 +28,10 @@ bool IntelHexParser::parse(QString file)
     }
 
     qint64 currentLine = 1;
-    while (true){
+    bool endOfFile = false;
+    while (!endOfFile){
 
-        qDebug() << "InteHexParser parsing line: " << currentLine;
+//        qDebug() << "InteHexParser parsing line: " << currentLine;
         buffer = hexFile.readLine();
 
         if( buffer.isEmpty()){
@@ -35,24 +40,67 @@ bool IntelHexParser::parse(QString file)
         parsedLine = parseLine(buffer);
 
         if(!parsedLine.valid){  // abort parsing when a line gets marked as not valid
-            fprintf(stdout, "line %ll not valid\n", &currentLine);
+            fprintf(stdout, "line %ll not valid\n"
+                            "aborting parse\n", &currentLine);
             hexFile.close();
             return 1;
+        }
+
+        switch (parsedLine.entyType) {
+        case DATA_RECORD:
+            qDebug() << extendetLinearAddress;
+            program.insert(extendetLinearAddress + parsedLine.address + extendetSegmentAddress * 16, parsedLine.data);
+            break;
+        case END_OF_FILE:
+            endOfFile = true;
+            break;
+        case EXTENDET_SEGMENT_ADDRESS_RECORD:
+            qDebug() << "Extendet Segment Address Record";
+            extendetSegmentAddress = parsedLine.data.toShort();
+            break;
+        case START_SEGMENT_ADDRESS_RECORD:
+            qDebug() << "Start Segment Address Record";
+            return 1;
+            break;
+        case EXTENDED_LINEAR_ADDRESS_RECORD:
+            qDebug() << "Extendet Linear Address Record";
+            extendetLinearAddress = (parsedLine.data.toLongLong() << 16);
+            break;
+        case START_LINEAR_ADDRESS_RECORD:
+            qDebug() << "Start Linear Address Record";
+            return 1;
+            break;
+        default:
+            fprintf(stdout, "unrecognised entry type at line %ll\n"
+                            "aborting parse\n", &currentLine);
+            hexFile.close();
+            return 1;
+
         }
 
         currentLine++;
     }
 
     hexFile.close();
+
+    fprintf(stdout, "Parsing hexfile done\n");
     return 0;
+}
+
+QByteArray IntelHexParser::content()
+{
+    return program;
+}
+
+QByteArray IntelHexParser::content(QString file)
+{
+    if(parse(file))
 }
 // parses a intel hex file line into the intelHexLine struct and validates the checksum
 IntelHexParser::intelHexLine IntelHexParser::parseLine(QString lineString)
 {
     intelHexLine parsedLine;
     QByteArray lineByteArray;
-
-    qDebug() << "IntelHexParser parseLine";
 
     // lines must start with a colon
     if (lineString[0] != ":"){

@@ -14,17 +14,19 @@ public:
     explicit IntelHexParser(QObject *parent = nullptr);
 
     bool parse(QString file);
+    QByteArray content();
+    QByteArray content(QString file);
 
 private:
-    QString filePath;
+    QByteArray program;
 
     typedef enum {
         DATA_RECORD                     = 00,
         END_OF_FILE                     = 01,
-        EXTENDET_SEGMENT_ADDRES_RECORD  = 02,
+        EXTENDET_SEGMENT_ADDRESS_RECORD  = 02,
         START_SEGMENT_ADDRESS_RECORD    = 03,
-        EXTENDED_LINEAR_ADDRES_RECORD   = 04,
-        START_LINEAR_ADDRES_RECORD      = 05
+        EXTENDED_LINEAR_ADDRESS_RECORD   = 04,
+        START_LINEAR_ADDRESS_RECORD      = 05
     } entyType;
 
     struct intelHexLine{
