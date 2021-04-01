@@ -23,7 +23,7 @@ void MainController::parseArguments(QStringList arguments)
        parser.addOptions({
                              // function code for modbus command (-c, --functionCode)
                              {{"c","functionCode"},
-                                 QCoreApplication::translate("main", "function code sent to slaveID as uint8, max two byte binary"),
+                                 QCoreApplication::translate("main", "function code sent to slaveID as uint8"),
                                  QCoreApplication::translate("main", "function code")
                              },
                              // do not write to modbus (-d, --dry-run)
@@ -35,7 +35,7 @@ void MainController::parseArguments(QStringList arguments)
                                  QCoreApplication::translate("main", "Modbus interface name to use"),
                                  QCoreApplication::translate("main", "interface name")
                              },
-                             // path to hexfile to be used
+                             // path to hexfile to be useds);
                              {{"hf", "hexfile"},
                                  QCoreApplication::translate("main", "Hex file to use"),
                                  QCoreApplication::translate("main", "file")
