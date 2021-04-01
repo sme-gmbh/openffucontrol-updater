@@ -3,7 +3,7 @@
 
 MainController::MainController(QObject *parent, QStringList arguments) : QObject(parent)
 {
-    fprintf(stdout, " --- openFFUupdater ---\n");
+    fprintf(stdout, " --- openFFUcontrol-updater ---\n");
 
     parseArguments(arguments);
     executeArguments();
@@ -16,30 +16,26 @@ MainController::~MainController()
 
 void MainController::parseArguments(QStringList arguments)
 {
-//    QString
-//    for(qint8 i = 0; i < arguments.length(); i++){
-
-//    }
-
     QCommandLineParser parser;
-       parser.setApplicationDescription("Test helper");
+       parser.setApplicationDescription("openFFUcontrol-updater");
        parser.addHelpOption();
 
        parser.addOptions({
                              // modbus interface to use (-d, --dry-run)
                              {{"d","dry-run"},
-                                 QCoreApplication::translate("main", "does not acces the Modbus interface !!!NOT WORKING!!!!")
+                                 QCoreApplication::translate("main", "does not acces the Modbus interface")
                              },
 
                              // modbus interface to use (-i, --interface)
                              {{"i","interface"},
-                                 QCoreApplication::translate("main", "Modbus interface name to use")
+                                 QCoreApplication::translate("main", "Modbus interface name to use"),
+                                 QCoreApplication::translate("main", "interface name")
                              },
 
                              // path to hexfile to be used
                              {{"hf", "hexfile"},
                                  QCoreApplication::translate("main", "Hex file to use"),
-                                 QCoreApplication::translate("main", "directory")
+                                 QCoreApplication::translate("main", "file")
                              },
 
        });
@@ -59,8 +55,11 @@ void MainController::executeArguments()
 {
     if (!pathToHexfile.isEmpty())
        parseIntelHex(pathToHexfile);
-    if (!modbusInterface.isEmpty())
-        m_modbushandler = new ModbusHandler(this, modbusInterface);
+    qDebug() << "Maincontroler: parse done";
+    if (!modbusInterface.isEmpty()){
+        m_modbushandler = new ModbusHandler(this, modbusInterface, isDryRun);
+        m_modbushandler->open();
+    }
 }
 
 void MainController::parseIntelHex(QString file)

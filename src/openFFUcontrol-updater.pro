@@ -9,8 +9,6 @@ CONFIG -= app_bundle
 
 SOURCES += \
         intelhexparser.cpp \
-        logentry.cpp \
-        loghandler.cpp \
         main.cpp \
         maincontroller.cpp \
         modbushandler.cpp
@@ -24,7 +22,5 @@ LIBS     += -lmodbus
 
 HEADERS += \
     intelhexparser.h \
-    logentry.h \
-    loghandler.h \
     maincontroller.h \
     modbushandler.h

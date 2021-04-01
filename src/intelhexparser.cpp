@@ -25,6 +25,7 @@ bool IntelHexParser::parse(QString file)
 
     if(!hexFile.open(QIODevice::ReadOnly | QIODevice::Text)){
         fprintf(stdout, "Unable to open File: %s\n", hexFile.errorString().toLocal8Bit().append("\0").data());
+        return 1;
     }
 
     qint64 currentLine = 1;
@@ -48,7 +49,6 @@ bool IntelHexParser::parse(QString file)
 
         switch (parsedLine.entyType) {
         case DATA_RECORD:
-            qDebug() << extendetLinearAddress;
             program.insert(extendetLinearAddress + parsedLine.address + extendetSegmentAddress * 16, parsedLine.data);
             break;
         case END_OF_FILE:
@@ -94,7 +94,10 @@ QByteArray IntelHexParser::content()
 
 QByteArray IntelHexParser::content(QString file)
 {
-    if(parse(file))
+    if(parse(file)){
+        return NULL;
+    }
+    return program;
 }
 // parses a intel hex file line into the intelHexLine struct and validates the checksum
 IntelHexParser::intelHexLine IntelHexParser::parseLine(QString lineString)
@@ -104,8 +107,7 @@ IntelHexParser::intelHexLine IntelHexParser::parseLine(QString lineString)
 
     // lines must start with a colon
     if (lineString[0] != ":"){
-        fprintf(stdout, "IntelHexParser parseLine failed,\n"
-                        "no valid start character\n");
+        fprintf(stdout, "IntelHexParser: parseLine failed: no valid start character\n");
         parsedLine.valid = false;
         return parsedLine;
     }
@@ -116,8 +118,7 @@ IntelHexParser::intelHexLine IntelHexParser::parseLine(QString lineString)
 
     // line must not be empty
     if (lineByteArray.isEmpty()){
-        fprintf(stdout, "IntelHexParser parseLine failed,\n"
-                        "line empty\n");
+        fprintf(stdout, "IntelHexParser: parseLine failed: line empty\n");
         parsedLine.valid = false;
         return parsedLine;
     }

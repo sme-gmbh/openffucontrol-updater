@@ -1,22 +1,38 @@
 #include "modbushandler.h"
 #include <QThread>
 
-ModbusHandler::ModbusHandler(QObject *parent, QString interface) : QObject(parent)
+// uses default parameters if not set otherwise
+ModbusHandler::ModbusHandler(QObject *parent, QString interface, bool isDryRun)
 {
     m_interface = interface;
+    m_isDryRun = isDryRun;
+}
+
+ModbusHandler::ModbusHandler(QObject *parent, QString interface, int baud, char parity, int data_bit, int stop_bit, bool isDryRun)
+{
+    m_interface = interface;
+    m_isDryRun = isDryRun;
+    m_baud = baud;
+    m_parity = parity;
+    m_data_bit = data_bit;
+    m_stop_bit = stop_bit;
 }
 
 bool ModbusHandler::open()
 {
+    if (m_isDryRun == true){
+        fprintf(stderr, "ModbusHandler::open(): DRY RUN: Modbus interface configured and connected.\n");
+        return true;
+    }
     QByteArray interface_ba = m_interface.toLocal8Bit();
-    m_bus = modbus_new_rtu(interface_ba.data(), 19200, 'E', 8, 1);
+    m_bus = modbus_new_rtu(interface_ba.data(), m_baud, m_parity, m_data_bit, m_stop_bit);
     if (m_bus == nullptr) {
-        emit signal_newEntry(LogEntry::Error, "ModbusHandler", "Unable to open interface");
+        fprintf(stdout, "ModbusHandler: Unable to open interface %s\n", m_interface.toLocal8Bit().data());
         return false;
     }
 
     if (modbus_connect(m_bus) == -1) {
-        emit signal_newEntry(LogEntry::Info, "ModbusHandler", QString("Unable to connect to device: ") + QString(modbus_strerror(errno)));
+        fprintf(stdout, "ModbusHandler: Unable to connect to device: %s\n", QString(modbus_strerror(errno)).toLocal8Bit().data());
         modbus_free(m_bus);
         return false;
     }
@@ -27,12 +43,21 @@ bool ModbusHandler::open()
 
 void ModbusHandler::close()
 {
+    if (m_isDryRun == true){
+        fprintf(stderr, "ModbusHandler::close(): DRY RUN: Modbus interface closed.\n");
+        return;
+    }
+
     modbus_close(m_bus);
     modbus_free(m_bus);
 }
 
 void ModbusHandler::setSlaveAddress(quint16 adr)
 {
+    if (m_isDryRun == true){
+        fprintf(stderr, "ModbusHandler::setSlaveAddress(): DRY RUN: Slave addres set.\n");
+        return;
+    }
     modbus_set_slave(m_bus, adr);
 }
 
