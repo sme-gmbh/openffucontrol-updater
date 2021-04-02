@@ -59,6 +59,8 @@ int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeS
         } else{
             byteCount = data.length();
         }
+
+        // assemble payload
         payload.append(writeStartAddress);
         payload.append(byteCount);
         payload.append(data.left(byteCount));
@@ -184,6 +186,67 @@ QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 r
     }
 
     return data;
+}
+// -1 written data not maching sent, 0 no issues, 0 < ocuExeptionCode
+int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint16 writeStartAddress, QByteArray data)
+{
+    // payloads the OCU understands for writing must look like:
+    //
+    // 2 byte           2 byte      not more than 128 byte
+    // start address    bytecount   data
+
+    QByteArray payload;
+    QByteArray request;
+    ocuResponse response;
+
+    // if addres to write to is not a page start address, existing data must be read and prependet
+    // then the EEPROM page can be witten to from the beginning
+    // this is an OCU limitation
+    if(writeStartAddress % 128 != 0){
+        quint16 readFromAddress = writeStartAddress - (writeStartAddress % 128);
+        QByteArray preWriteAddressData = intEepromRead(slaveAddress, readFromAddress, writeStartAddress % 128);
+        data.prepend(preWriteAddressData);
+    }
+
+    qint16 byteCount = 0;       // number of bytes in next transmision, max 128
+    while(data.length() != 0){  // transmit data in max 128 byte parts
+
+        if (data.length() > 128){
+            byteCount = 128;
+        } else{
+            byteCount = data.length();
+        }
+
+        // assemble payload
+        payload.append(writeStartAddress);
+        payload.append(byteCount);
+        payload.append(data.left(byteCount));
+
+        // send data to write to the OCU
+        request = createRequest(slaveAddress, OCU_INT_EEPROM_WRITE, payload);
+        response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
+
+        // OCU must confirm transmition with ACK
+        if (response.exeptionCode != E_ACKNOWLEDGE){
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromWrite() failed to write: %s", errorString(response.exeptionCode).toLocal8Bit().data());
+            return response.exeptionCode;
+        }
+
+        // wait for OCU to write page
+        for(; systemBusy(slaveAddress) ;){
+            QThread::msleep(100);
+        }
+
+        //read back and compare written data with sent data
+        if (data.left(byteCount) != intEepromRead(slaveAddress, writeStartAddress, byteCount)){
+                fprintf(stderr, "OpneFFUcontrollerOCUhandler::intEepromWrite(): EEPROM data read back does NOT match data sent.");
+                return -1;
+        }
+
+        data.remove(0, byteCount);
+    }
+
+    return 0;
 }
 
 QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint16 readStartAddress, quint64 byteCount)
