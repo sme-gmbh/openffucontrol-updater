@@ -55,23 +55,37 @@ void ModbusHandler::close()
 void ModbusHandler::setSlaveAddress(quint16 adr)
 {
     if (m_isDryRun == true){
-        fprintf(stderr, "ModbusHandler::setSlaveAddress(): DRY RUN: Slave addres set.\n");
+        fprintf(stdout, "ModbusHandler::setSlaveAddress(): DRY RUN: Slave addres set.\n");
         return;
     }
     modbus_set_slave(m_bus, adr);
 }
-// returns -1 if error occurs, else total length of message sent
-int ModbusHandler::sendRawRequest(QByteArray request)
+// returns empty QByteArray if occurs, else the raw response to the request
+QByteArray ModbusHandler::sendRawRequest(QByteArray request)
 {
+    QByteArray response;
+    quint8 rawResponse[MODBUS_RTU_MAX_ADU_LENGTH];
+    int requestLength = -1;
+
     if (m_isDryRun == true){
-        fprintf(stderr, "ModbusHandler::sendRawRequest(): DRY RUN: 0x%s.\n", request.toHex().data());
-        return -1;
+        fprintf(stdout, "ModbusHandler::sendRawRequest(): DRY RUN: 0x%s.\n", request.toHex().data());
+        return response;
     }
 
-    int requestLength = modbus_send_raw_request(m_bus, (unsigned char*)request.constData(), request.length());
-    modbus_receive_confirmation(m_bus, (uint8_t*)MODBUS_RTU_MAX_ADU_LENGTH);
+    requestLength = modbus_send_raw_request(m_bus, (unsigned char*)request.constData(), request.length());
+    if (requestLength == -1){
+        fprintf(stderr, "ModbusHandler::sendRawRequest(): Unable to send request. Libmodbus error: %s", modbus_strerror(errno));
+        return response;
+    }
 
-    return requestLength;
+    modbus_receive_confirmation(m_bus, rawResponse);
+    if (requestLength == -1){
+        fprintf(stderr, "ModbusHandler::sendRawRequest(): No response to sent request. Libmodbus error: %s", modbus_strerror(errno));
+        return response;
+    }
+    response = QByteArray::fromRawData((char*)rawResponse, MODBUS_RTU_MAX_ADU_LENGTH);
+
+    return response;
 }
 
 //void ModbusHandler::slot_writeHoldingRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg, quint16 rawdata)

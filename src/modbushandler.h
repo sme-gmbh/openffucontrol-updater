@@ -16,7 +16,7 @@ public:
     bool open();
     void close();
     void setSlaveAddress(quint16 adr);
-    int sendRawRequest(QByteArray request);
+    QByteArray sendRawRequest(QByteArray request);
 
 signals:
 

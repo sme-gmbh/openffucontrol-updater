@@ -11,12 +11,34 @@ class OpenFFUcontrolOCUhandler : public QObject
 public:
     explicit OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler* modbushandler);
 
-    int sendRawCommand(quint16 slaveAddress, quint16 functonCode);
-    int sendRawCommand(quint16 slaveAddress, quint16 functonCode, QByteArray payload);
-    int auxEepromErase(qint16 slaveAddress);
+    QByteArray sendRawCommand(quint8 slaveAddress, quint16 functonCode);
+    QByteArray sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload);
 
-    QByteArray createRequest(quint16 slaveAddress, quint16 functionCode);
-    QByteArray createRequest(quint16 slaveAddress, quint16 functionCode, QByteArray payload);
+    // OCU Commands
+
+    // auxiliary EEPROM options
+    QByteArray auxEepromErase(quint8 slaveAddress);
+    int auxEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data);
+    QByteArray auxEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
+
+    // internal flash options
+    int intFlashErase(quint8 slaveAddress);
+    int copyEepromToFlash(quint8 slaveAddress);
+    QByteArray intFlashRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
+
+    // internal EEPROM options
+    int intEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data);
+    QByteArray intEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
+
+    // system properties
+    bool systemBusy(quint8 slaveAddress);
+    int bootApplication(quint8 slaveAddress);
+
+    QByteArray createRequest(quint8 slaveAddress, quint8 functionCode);
+    QByteArray createRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
+
+
+private:
 
     typedef enum {  // OCU function codes
         OCU_AUX_EEPROM_ERASE= 65,
@@ -31,8 +53,33 @@ public:
         OCU_INT_EEPROM_WRITE = 101
     } OCUfunctionCodes;
 
-private:
+    typedef enum {
+        E_ILLEGAL_FUNCTION = 0x01,
+        E_ILLEGAL_DATA_ADDRESS = 0x02,
+        E_ILLEGAL_DATA_VALUE = 0x03,
+        E_SERVER_DEVICE_FAILURE = 0x04,
+        E_ACKNOWLEDGE = 0x05,
+        E_SERVER_DEVICE_BUSY = 0x06,
+        E_MEMORY_PARITY_ERROR = 0x08,
+        E_GATEWAY_PATH_UNAVAILABLE = 0x0a,
+        E_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND = 0x0b
+    } ModbusException;
+
+    typedef enum {
+        E_PARSER_FAILED = 0xff
+    } ParserExeptions;
+
+    struct ocuResponse{
+        quint8 slaveId = 0;
+        quint8 functionCode = 0;
+        QByteArray payload;
+        quint8 exeptionCode = 0;
+    };
+
     ModbusHandler* m_modbusHander;
+    ocuResponse m_response;
+
+    ocuResponse parseOCUResponse(QByteArray response);
 
 signals:
 
