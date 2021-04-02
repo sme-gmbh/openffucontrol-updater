@@ -11,19 +11,19 @@ class OpenFFUcontrolOCUhandler : public QObject
 public:
     explicit OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler* modbushandler);
 
-    QByteArray sendRawCommand(quint8 slaveAddress, quint16 functonCode);
-    QByteArray sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload);
+    quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode);
+    quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload);
 
     // OCU Commands
 
     // auxiliary EEPROM options
-    QByteArray auxEepromErase(quint8 slaveAddress);
+    bool auxEepromErase(quint8 slaveAddress);
     int auxEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data);
     QByteArray auxEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
 
     // internal flash options
     int intFlashErase(quint8 slaveAddress);
-    int copyEepromToFlash(quint8 slaveAddress);
+    int copyAuxEepromToFlash(quint8 slaveAddress);
     QByteArray intFlashRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
 
     // internal EEPROM options
@@ -32,7 +32,7 @@ public:
 
     // system properties
     bool systemBusy(quint8 slaveAddress);
-    int bootApplication(quint8 slaveAddress);
+    void bootApplication(quint8 slaveAddress);
 
     QByteArray createRequest(quint8 slaveAddress, quint8 functionCode);
     QByteArray createRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
@@ -63,7 +63,7 @@ private:
         E_MEMORY_PARITY_ERROR = 0x08,
         E_GATEWAY_PATH_UNAVAILABLE = 0x0a,
         E_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND = 0x0b
-    } ModbusException;
+    } ocuExeptionCode;
 
     typedef enum {
         E_PARSER_FAILED = 0xff

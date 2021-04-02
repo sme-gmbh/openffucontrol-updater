@@ -4,23 +4,61 @@ OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandle
 {
     m_modbusHander = modbushandler;
 }
-
-QByteArray OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode)
+// returns ocuExeptionCode 0 if only data was sent
+quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode)
 {
     qDebug() << "OpenFFUcontrolOCUhandler sendRawCommand" << slaveAddress << functonCode;
-    return m_modbusHander->sendRawRequest(createRequest(slaveAddress, functonCode));
+    m_response = parseOCUResponse( m_modbusHander->sendRawRequest(createRequest(slaveAddress, functonCode)));
+    return m_response.exeptionCode;
 }
-
-QByteArray OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload)
+// returns ocuExeptionCode 0 if only data was sent
+quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload)
 {
     qDebug() << "OpenFFUcontrolOCUhandler sendRawCommand" << slaveAddress << functonCode << payload.toHex();
-    return m_modbusHander->sendRawRequest(createRequest(slaveAddress, functonCode, payload));
+    m_response = parseOCUResponse( m_modbusHander->sendRawRequest(createRequest(slaveAddress, functonCode, payload)));
+    return m_response.exeptionCode;
 }
 
-QByteArray OpenFFUcontrolOCUhandler::auxEepromErase(quint8 slaveAddress)
+bool OpenFFUcontrolOCUhandler::auxEepromErase(quint8 slaveAddress)
 {
     QByteArray request = createRequest(slaveAddress, OCU_AUX_EEPROM_ERASE);
-    return m_modbusHander->sendRawRequest(request);
+    ocuResponse response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
+
+    if (response.exeptionCode == E_ACKNOWLEDGE){
+        return true;
+    }
+
+    return false;
+}
+
+int OpenFFUcontrolOCUhandler::copyAuxEepromToFlash(quint8 slaveAddress)
+{
+    QByteArray request = createRequest(slaveAddress, OCU_COPY_EEPROM_TO_FLASH);
+    ocuResponse response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
+
+    if (response.exeptionCode == E_ACKNOWLEDGE){
+        return true;
+    }
+
+    return false;
+}
+// returns true if system is busy
+bool OpenFFUcontrolOCUhandler::systemBusy(quint8 slaveAddress)
+{
+    QByteArray request = createRequest(slaveAddress, OCU_STATUS_READ);
+    ocuResponse response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
+
+    if (response.exeptionCode == E_ACKNOWLEDGE){
+        return false;
+    }
+
+    return true;
+}
+// Requests ocu application boot. OCU does not confirm the success.
+void OpenFFUcontrolOCUhandler::bootApplication(quint8 slaveAddress)
+{
+    QByteArray request = createRequest(slaveAddress, OCU_AUX_EEPROM_ERASE);
+    m_modbusHander->sendRawRequest(request);
 }
 
 QByteArray OpenFFUcontrolOCUhandler::createRequest(quint8 slaveAddress, quint8 functionCode)
