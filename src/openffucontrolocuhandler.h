@@ -25,11 +25,11 @@ public:
     // internal flash options
     int intFlashErase(quint8 slaveAddress);
     int copyAuxEepromToFlash(quint8 slaveAddress);
-    QByteArray intFlashRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
+    QByteArray intFlashRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount);
 
     // internal EEPROM options
-    int intEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data);
-    QByteArray intEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
+    int intEepromWrite(quint8 slaveAddress, quint16 writeStartAddress, QByteArray data);
+    QByteArray intEepromRead(quint8 slaveAddress, quint16 readStartAddress, quint64 byteCount);
 
     // system properties
     bool systemBusy(quint8 slaveAddress);
