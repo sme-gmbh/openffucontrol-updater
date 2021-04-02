@@ -20,7 +20,7 @@ public:
     // auxiliary EEPROM options
     bool auxEepromErase(quint8 slaveAddress);
     int auxEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data);
-    QByteArray auxEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint8 byteCount);
+    QByteArray auxEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount);
 
     // internal flash options
     int intFlashErase(quint8 slaveAddress);

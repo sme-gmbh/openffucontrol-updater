@@ -90,6 +90,51 @@ int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeS
     return 0;
 }
 
+QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount)
+{
+    // payloads the OCU understands for reading must look like:
+    //
+    // 4 byte           2 byte
+    // start address    bytecount no more than 128 byte
+
+    QByteArray payload;
+    QByteArray request;
+    ocuResponse response;
+    QByteArray data;
+
+    quint8 requestByteCount = 0;
+    quint32 requestReadAddress = 0;
+    for (quint64 i = 0; byteCount != 0; i++){
+        if (byteCount > 128){
+            requestByteCount = 128;
+            byteCount = byteCount - 128;
+        } else{
+            requestByteCount = byteCount;
+            byteCount = 0;
+        }
+        requestReadAddress = readStartAddress + i * 128;
+
+        payload.append(requestReadAddress);
+        payload.append(requestByteCount);
+
+        request = createRequest(slaveAddress, OCU_AUX_EEPROM_READ, payload);
+        response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
+
+        if(response.exeptionCode != 0){
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromRead() failed to read %i bytes at address %i: %s", requestByteCount, requestReadAddress, errorString(response.exeptionCode).toLocal8Bit().data());
+            return NULL;
+        }
+        data.append(response.payload);
+
+        payload.clear();
+    }
+
+    payload.append(readStartAddress);
+    payload.append(byteCount);
+
+    return data;
+}
+
 int OpenFFUcontrolOCUhandler::copyAuxEepromToFlash(quint8 slaveAddress)
 {
     QByteArray request = createRequest(slaveAddress, OCU_COPY_EEPROM_TO_FLASH);
