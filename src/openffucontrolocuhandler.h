@@ -2,6 +2,7 @@
 #define OPENFFUCONTROLOCUHANDLER_H
 
 #include <QObject>
+#include <QThread>
 
 #include "modbushandler.h"
 
@@ -37,6 +38,7 @@ public:
     QByteArray createRequest(quint8 slaveAddress, quint8 functionCode);
     QByteArray createRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
 
+    QString errorString(quint8 errorCode);
 
 private:
 
