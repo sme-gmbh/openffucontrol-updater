@@ -82,7 +82,7 @@ private:
     };
 
     bool isDryRun = false;
-    bool debug = false;
+    bool isDebug = false;
     ModbusHandler* m_modbusHander;
     ocuResponse m_response;
 

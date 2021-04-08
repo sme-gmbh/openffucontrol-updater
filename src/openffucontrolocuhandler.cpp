@@ -4,6 +4,7 @@ OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandle
 {
     m_modbusHander = modbushandler;
     isDryRun = dryRun;
+    debug = debug;
 }
 // returns ocuExeptionCode 0 if only data was sent
 quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode)
@@ -384,7 +385,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
 {
     ocuResponse parsed;
 
-    if (debug){
+    if (isDebug){
         QByteArray buffer = response;
         fprintf(stdout, "DEBUG OpenFFUcontrolOCUhandler::parse(): Response to parse: 0x%s\n", buffer.toHex().data());
     }
@@ -406,7 +407,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     parsed.crc = response.right(2).toUShort(nullptr, 10);
 
 
-    if (debug){
+    if (isDebug){
         fprintf(stdout, "DEBUG Parsed slave ID: %i\n", parsed.slaveId);
         fprintf(stdout, "DEBUG Parsed function code: %i\n", parsed.functionCode);
         fprintf(stdout, "DEBUG Parsed payload: 0x%s\n", parsed.payload.toHex().data());
