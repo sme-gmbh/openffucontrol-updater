@@ -25,7 +25,7 @@ bool OpenFFUcontrolOCUhandler::auxEepromErase(quint8 slaveAddress)
     ocuResponse response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
 
     if (response.exeptionCode != E_ACKNOWLEDGE){
-        fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromErase() failed: %s", errorString(response.exeptionCode).toLocal8Bit().data());
+        fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromErase() failed: %s\n", errorString(response.exeptionCode).toLocal8Bit().data());
         return false;
     }
 
@@ -72,7 +72,7 @@ int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeS
 
         // OCU must confirm transmition with ACK
         if (response.exeptionCode != E_ACKNOWLEDGE){
-            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromWrite() failed to write: %s", errorString(response.exeptionCode).toLocal8Bit().data());
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromWrite() failed to write: %s\n", errorString(response.exeptionCode).toLocal8Bit().data());
             return response.exeptionCode;
         }
 
@@ -124,7 +124,7 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
         response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
 
         if(response.exeptionCode != 0){
-            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromRead() failed to read %i bytes at address %i: %s", requestByteCount, requestReadAddress, errorString(response.exeptionCode).toLocal8Bit().data());
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromRead() failed to read %i bytes at address %i: %s\n", requestByteCount, requestReadAddress, errorString(response.exeptionCode).toLocal8Bit().data());
             return NULL;
         }
         data.append(response.payload);
@@ -178,7 +178,7 @@ QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 r
         response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
 
         if(response.exeptionCode != 0){
-            fprintf(stderr, "OpenFFUcontrollOCUhandler::intFlashRead() failed to read %i bytes at address %i: %s", requestByteCount, requestReadAddress, errorString(response.exeptionCode).toLocal8Bit().data());
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::intFlashRead() failed to read %i bytes at address %i: %s\n", requestByteCount, requestReadAddress, errorString(response.exeptionCode).toLocal8Bit().data());
             return NULL;
         }
         data.append(response.payload);
@@ -229,7 +229,7 @@ int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint16 writeS
 
         // OCU must confirm transmition with ACK
         if (response.exeptionCode != E_ACKNOWLEDGE){
-            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromWrite() failed to write: %s", errorString(response.exeptionCode).toLocal8Bit().data());
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromWrite() failed to write: %s\n", errorString(response.exeptionCode).toLocal8Bit().data());
             return response.exeptionCode;
         }
 
@@ -281,7 +281,7 @@ QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint16 
         response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
 
         if(response.exeptionCode != 0){
-            fprintf(stderr, "OpenFFUcontrollOCUhandler::intFlashRead() failed to read %i bytes at address %i: %s", requestByteCount, requestReadAddress, errorString(response.exeptionCode).toLocal8Bit().data());
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::intFlashRead() failed to read %i bytes at address %i: %s\n", requestByteCount, requestReadAddress, errorString(response.exeptionCode).toLocal8Bit().data());
             return NULL;
         }
         data.append(response.payload);
@@ -350,23 +350,29 @@ QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)
         return "gateway path unavailable";
     case E_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND:
         return "gateway target device faield to respond";
+    case E_PARSER_FAILED:
+        return "response parser failed";
     default:
         break;
     }
 
     return "Unnknown Error";
 }
-// returns true isf update was written succesfully
+// returns true if update was written succesfully
 bool OpenFFUcontrolOCUhandler::updateFirmware(quint8 slaveAddress, QByteArray application)
 {
     // erase aux EEPROM before writng new firmware
+    fprintf(stdout, "Erasing auxiliary EEPROM\n");
     if (!auxEepromErase(slaveAddress)){
         return false;
     }
+    // write update to aux EEPROM
+    fprintf(stdout, "Writing update to auxiliary EEPROM\n");
     if(auxEepromWrite(slaveAddress, 0, application) != 0){
         return false;
     }
     // copy EEPROM into programm flash
+    fprintf(stdout, "Copy auxiliary EEPROM to program flash\n");
     if (copyAuxEepromToFlash(slaveAddress) != 0){
         return false;
     }
@@ -385,7 +391,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     if (parsed.functionCode >= 0x80){
         // exeption codes are only one byte, if there are more ther must be an issue in parsing
         if (parsed.payload.length() != 1){
-            fprintf(stderr, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Failed to parse resonse. Response thought to be an OCU exeption but payload lengt is not 1");
+            fprintf(stderr, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Failed to parse resonse. Response thought to be an OCU exeption but payload lengt is not 1.\n");
             parsed.exeptionCode = E_PARSER_FAILED;
         } else {
             parsed.exeptionCode = response.at(2);

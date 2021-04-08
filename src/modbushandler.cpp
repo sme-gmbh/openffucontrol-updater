@@ -79,69 +79,16 @@ QByteArray ModbusHandler::sendRawRequest(QByteArray request)
 
     requestLength = modbus_send_raw_request(m_bus, (unsigned char*)request.constData(), request.length());
     if (requestLength == -1){
-        fprintf(stderr, "ModbusHandler::sendRawRequest(): Unable to send request. Libmodbus error: %s", modbus_strerror(errno));
+        fprintf(stderr, "ModbusHandler::sendRawRequest(): Unable to send request. Libmodbus error: %s\n", modbus_strerror(errno));
         return response;
     }
 
     modbus_receive_confirmation(m_bus, rawResponse);
     if (requestLength == -1){
-        fprintf(stderr, "ModbusHandler::sendRawRequest(): No response to sent request. Libmodbus error: %s", modbus_strerror(errno));
+        fprintf(stderr, "ModbusHandler::sendRawRequest(): No response to sent request. Libmodbus error: %s\n", modbus_strerror(errno));
         return response;
     }
     response = QByteArray::fromRawData((char*)rawResponse, MODBUS_RTU_MAX_ADU_LENGTH);
 
     return response;
 }
-
-//void ModbusHandler::slot_writeHoldingRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg, quint16 rawdata)
-//{
-//    int result;
-//    modbus_set_slave(m_bus, adr);
-//    // Bus clearance time
-//    QThread::msleep(100);
-//    result = modbus_write_register(m_bus, reg, rawdata);
-//    if (result >= 0)
-//        emit signal_wroteHoldingRegisterData(telegramID);
-//    else
-//    {
-//        emit signal_newEntry(LogEntry::Info, "EbmModbus", QString("modbus_write_register returned: ") + QString(modbus_strerror(errno) +
-//                                             QString().sprintf(". adr=%i, reg=%i.", adr, reg)));
-//        emit signal_transactionLost(telegramID);
-//    }
-//}
-
-//void ModbusHandler::slot_readHoldingRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg)
-//{
-//    int result;
-//    uint16_t rawdata;
-//    modbus_set_slave(m_bus, adr);
-//    // Bus clearance time
-//    QThread::msleep(100);
-//    result = modbus_read_registers(m_bus, reg, 1, &rawdata);
-//    if (result >= 0)
-//        emit signal_receivedHoldingRegisterData(telegramID, adr, reg, rawdata);
-//    else
-//    {
-//        emit signal_newEntry(LogEntry::Info, "EbmModbus", QString("modbus_read_registers returned: ") + QString(modbus_strerror(errno) +
-//                                            QString().sprintf(". adr=%i, reg=%i.", adr, reg)));
-//        emit signal_transactionLost(telegramID);
-//    }
-//}
-
-//void ModbusHandler::slot_readInputRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg)
-//{
-//    int result;
-//    uint16_t rawdata;
-//    modbus_set_slave(m_bus, adr);
-//    // Bus clearance time
-//    QThread::msleep(100);
-//    result = modbus_read_input_registers(m_bus, reg, 1, &rawdata);
-//    if (result >= 0)
-//        emit signal_receivedInputRegisterData(telegramID, adr, reg, rawdata);
-//    else
-//    {
-//        emit signal_newEntry(LogEntry::Info, "EbmModbus", QString("modbus_read_input_registers returned: ") + QString(modbus_strerror(errno) +
-//                                            QString().sprintf(". adr=%i, reg=%i.", adr, reg)));
-//        emit signal_transactionLost(telegramID);
-//    }
-//}

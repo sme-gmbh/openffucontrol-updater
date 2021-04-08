@@ -32,16 +32,8 @@ private:
     modbus_t *m_bus;
 
 public slots:
-    //void slot_writeHoldingRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg, quint16 rawdata);
-    //void slot_readHoldingRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg);
-    //void slot_readInputRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg);
 
 signals:
-    // Modbus result signals
-    void signal_transactionLost(quint64 telegramID);
-    //void signal_receivedHoldingRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg, quint16 rawdata);
-    //void signal_receivedInputRegisterData(quint64 telegramID, quint16 adr, ModbusHandler::ModbusHandler reg, quint16 rawdata);
-    void signal_wroteHoldingRegisterData(quint64 telegramID);
 
 };
 

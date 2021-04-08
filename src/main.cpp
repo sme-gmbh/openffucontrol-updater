@@ -9,5 +9,5 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("openFFUcontrol-updater");
     MainController c(nullptr, QCoreApplication::arguments());
 
-    return a.exec();
+    //return a.exec();
 }

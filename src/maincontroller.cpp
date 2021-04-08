@@ -3,7 +3,7 @@
 
 MainController::MainController(QObject *parent, QStringList arguments) : QObject(parent)
 {
-    fprintf(stdout, " --- openFFUcontrol-updater ---\n");
+    fprintf(stdout, " --- openFFUcontrol-updater ---\n\n");
 
     parseArguments(arguments);
     executeArguments();
@@ -83,39 +83,50 @@ void MainController::parseArguments(QStringList arguments)
 // execute what is commanded by the user
 void MainController::executeArguments()
 {
-    // check if running is even possible
-    if (modbusInterface.isEmpty()){
-        fprintf(stderr, "Please provide modbus interface\n");
-        return;
-    }
-
     // execut arguments
     if (!modbusInterface.isEmpty()){
         m_modbushandler = new ModbusHandler(this, modbusInterface, isDryRun);
         m_modbushandler->setBaudRate(baudRate);
-        m_modbushandler->open();
+        if (!m_modbushandler->open()){
+            fprintf(stderr, "Could not open modbus interface.\n");
+            return;
+        }
+    } else {
+        fprintf(stderr, "Please provide modbus interface\n");
+        return;
     }
 
     if (deviceType == "OCU" || deviceType.isEmpty()){
         m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler);
         if (!payload.isEmpty()){
+            fprintf(stdout, " --- Sending direct data ---\n\n");
             quint8 errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode, payload);
-            fprintf(stdout, "Direct data sent. Returend %s.", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            fprintf(stdout, "Direct data sent. Returend %s.\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
         }
         if (update){
+            fprintf(stdout, " --- Starting OCU Update ---\n\n");
             if (pathToHexfile.isEmpty()){
-                fprintf(stdout, "For update please provide hex file.\n");
+                fprintf(stdout, "For update please provide a hex file.\n");
             } else {
-                if(m_ocuHandler->updateFirmware(slaveId, getIntelHexContent(pathToHexfile))){
+                QByteArray program = getIntelHexContent(pathToHexfile);
+                if (program == nullptr){
+                    fprintf(stderr, "Hex file not readable.\n"
+                                    "Update aborted.\n");
+                    return;
+                }
+                if(m_ocuHandler->updateFirmware(slaveId, program)){
                     fprintf(stdout, "Update sucsessfull\n");
                 } else{
                     fprintf(stdout, "Errors occured during update!\n"
-                                    "Update might be written partialy, errors should be listed above.}n"
+                                    "Update might be written partialy, errors should be listed above.\n"
                                     "Rebooting might lead to you walking over to number %i with a programmer.\n", slaveId);
                     return;
                 }
             }
         }
+    } else {
+        fprintf(stderr, "Unknown device type %s\n", deviceType.toLocal8Bit().data());
+        return;
     }
     this->~MainController();
 }
@@ -124,7 +135,7 @@ QByteArray MainController::getIntelHexContent(QString file)
 {
     IntelHexParser parser;
     if(!parser.parse(file)){
-        fprintf(stdout, "Unable to parse intel hex file");
+        return nullptr;
     }
     return parser.content();
 }
