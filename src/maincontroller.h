@@ -27,10 +27,11 @@ private:
     QString modbusInterface;
     QString pathToHexfile;
     QByteArray payload;
+    bool directDataSend = false;
     quint8 slaveId = 0;
     QString deviceType;
-    quint32 mbusByteTimeoutSec = 0;
-    quint32 mbusByteTimeoutMSec = 0;
+//    quint32 mbusByteTimeoutSec = 0;
+//    quint32 mbusByteTimeoutMSec = 0;
     bool update = false;
     bool debug = false;
 

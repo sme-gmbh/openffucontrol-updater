@@ -50,6 +50,10 @@ void MainController::parseArguments(QStringList arguments)
                                  QCoreApplication::translate("main", "data payload sent to --slaveID under --functionCode, data must be in hex without leading 0x and fit the function code, else corruption might occure. There are no checks to make shure the data fits to the function code!"),
                                  QCoreApplication::translate("main", "data")
                              },
+                             // send direct user command
+                             {{"r","direct-command"},
+                                 QCoreApplication::translate("main", "Sends function code and payload (if set) to slave"),
+                             },
                              // device type to update
                              {{"s", "slave", "slave-ID"},
                                  QCoreApplication::translate("main", "Slave address as uint8 used to connect to --type device on --interface interface. Defaults to 0."),
@@ -60,13 +64,13 @@ void MainController::parseArguments(QStringList arguments)
                                  QCoreApplication::translate("main", "Device type to inteface via modbus. Defaults to OCU. Supported: OCU"),
                                  QCoreApplication::translate("main", "device type")
                              },// modbus timout
-                             {{"bts", "byte-timeout-sec"},
-                                 QCoreApplication::translate("main", "Modbus byte timeout in seconds"),
-                                 QCoreApplication::translate("main", "timeout")
-                             },{{"btms", "byte-timeout-msec"},
-                                QCoreApplication::translate("main", "Modbus byte timeout in milliesconds"),
-                                QCoreApplication::translate("main", "timeout")
-                            },
+//                             {{"bts", "byte-timeout-sec"},
+//                                 QCoreApplication::translate("main", "Modbus byte timeout in seconds"),
+//                                 QCoreApplication::translate("main", "timeout")
+//                             },{{"btms", "byte-timeout-msec"},
+//                                QCoreApplication::translate("main", "Modbus byte timeout in milliesconds"),
+//                                QCoreApplication::translate("main", "timeout")
+//                            },
                              // fully automatic update of device
                              {{"u", "update"},
                                  QCoreApplication::translate("main", "Updates device using the hex file via the modbus interface"),
@@ -87,6 +91,7 @@ void MainController::parseArguments(QStringList arguments)
        pathToHexfile = parser.value("hexfile");
        modbusInterface = parser.value("interface");
        payload = QByteArray::fromHex( parser.value("payload").toLocal8Bit());
+       directDataSend = parser.isSet("direct-command");
        slaveId = parser.value("slave").toUInt();
        deviceType = parser.value("type");
 //       mbusByteTimeoutMSec = parser.value("byte");
@@ -112,12 +117,6 @@ void MainController::executeArguments()
 
     if (deviceType == "OCU" || deviceType.isEmpty()){
         m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler, isDryRun, debug);
-        if (!payload.isEmpty()){
-            fprintf(stdout, " --- Sending direct data ---\n\n");
-            quint8 errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode, payload);
-            fprintf(stdout, "Direct data sent. Returend %s. Code %i\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data(), errorCode);
-            return;
-        }
         if (update){
             fprintf(stdout, " --- Starting OCU Update ---\n\n");
             if (pathToHexfile.isEmpty()){
@@ -138,6 +137,17 @@ void MainController::executeArguments()
                     return;
                 }
             }
+        }
+        if (functionCode != 0){
+            fprintf(stdout, " --- Sending direct data ---\n\n");
+            quint8 errorCode = 0;
+            if (!payload.isEmpty()){
+                errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode, payload);
+            } else {
+                errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode);
+            }
+            fprintf(stdout, "Direct data sent. Returend %s. Code %i\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data(), errorCode);
+            return;
         }
     } else {
         fprintf(stderr, "Unknown device type %s\n", deviceType.toLocal8Bit().data());
