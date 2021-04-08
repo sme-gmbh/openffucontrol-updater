@@ -78,6 +78,7 @@ private:
         quint8 functionCode = 0;
         QByteArray payload;
         quint8 exeptionCode = 0;
+        quint16 crc = 0;
     };
 
     bool isDryRun = false;
