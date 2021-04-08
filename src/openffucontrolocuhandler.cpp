@@ -407,6 +407,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
             parsed.exeptionCode = E_PARSER_FAILED;
         } else {
             parsed.exeptionCode = response.at(2);
+            fprintf(stdout, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Error code recived: %i\n", parsed.exeptionCode);
         }
     }
 

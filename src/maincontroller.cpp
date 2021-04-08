@@ -101,7 +101,7 @@ void MainController::executeArguments()
         if (!payload.isEmpty()){
             fprintf(stdout, " --- Sending direct data ---\n\n");
             quint8 errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode, payload);
-            fprintf(stdout, "Direct data sent. Returend %s.\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            fprintf(stdout, "Direct data sent. Returend %s. Code %i\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data(), errorCode);
             return;
         }
         if (update){
