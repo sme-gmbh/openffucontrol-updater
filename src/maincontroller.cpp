@@ -137,8 +137,7 @@ void MainController::executeArguments()
                     return;
                 }
             }
-        }
-        if (functionCode != 0){
+        } else {
             fprintf(stdout, " --- Sending direct data ---\n\n");
             quint8 errorCode = 0;
             if (!payload.isEmpty()){
@@ -146,7 +145,9 @@ void MainController::executeArguments()
             } else {
                 errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode);
             }
-            fprintf(stdout, "Direct data sent. Returend %s. Code %i\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data(), errorCode);
+            if (errorCode != 0)
+                fprintf(stdout, "Direct data sent. Returend %s. Code %i\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data(), errorCode);
+            fprintf(stdout, "Respons payload is: 0x%s\n", m_ocuHandler->getResponsePayload().toHex().data());
             return;
         }
     } else {

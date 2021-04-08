@@ -40,6 +40,7 @@ public:
 
     QString errorString(quint8 errorCode);
 
+    QByteArray getResponsePayload();
     bool updateFirmware(quint8 slaveAddress, QByteArray application);
 
 private:

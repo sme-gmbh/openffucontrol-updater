@@ -360,6 +360,11 @@ QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)
 
     return "Unknown Error";
 }
+
+QByteArray OpenFFUcontrolOCUhandler::getResponsePayload()
+{
+    return m_response.payload;
+}
 // returns true if update was written succesfully
 bool OpenFFUcontrolOCUhandler::updateFirmware(quint8 slaveAddress, QByteArray application)
 {
