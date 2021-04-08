@@ -10,7 +10,7 @@ class OpenFFUcontrolOCUhandler : public QObject
 {
     Q_OBJECT
 public:
-    explicit OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler* modbushandler);
+    explicit OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler* modbushandler, bool dryRun = false);
 
     quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode);
     quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload);
@@ -80,6 +80,7 @@ private:
         quint8 exeptionCode = 0;
     };
 
+    bool isDryRun = false;
     ModbusHandler* m_modbusHander;
     ocuResponse m_response;
 

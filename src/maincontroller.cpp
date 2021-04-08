@@ -97,11 +97,12 @@ void MainController::executeArguments()
     }
 
     if (deviceType == "OCU" || deviceType.isEmpty()){
-        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler);
+        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler, isDryRun);
         if (!payload.isEmpty()){
             fprintf(stdout, " --- Sending direct data ---\n\n");
             quint8 errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode, payload);
             fprintf(stdout, "Direct data sent. Returend %s.\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            return;
         }
         if (update){
             fprintf(stdout, " --- Starting OCU Update ---\n\n");
@@ -127,9 +128,7 @@ void MainController::executeArguments()
     } else {
         fprintf(stderr, "Unknown device type %s\n", deviceType.toLocal8Bit().data());
         return;
-    }
-    this->~MainController();
-}
+    }}
 
 QByteArray MainController::getIntelHexContent(QString file)
 {

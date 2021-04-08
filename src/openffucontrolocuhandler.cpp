@@ -1,8 +1,9 @@
 #include "openffucontrolocuhandler.h"
 
-OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler *modbushandler)
+OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler *modbushandler, bool dryRun)
 {
     m_modbusHander = modbushandler;
+    isDryRun = dryRun;
 }
 // returns ocuExeptionCode 0 if only data was sent
 quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode)
@@ -383,13 +384,24 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
 {
     ocuResponse parsed;
 
+    if (response == nullptr && isDryRun){
+        parsed.exeptionCode = E_ACKNOWLEDGE;
+        return parsed;
+    }
+
+    if (response.isEmpty()){
+        fprintf(stderr, "OpenFFUcontrollerOCUhandler::ocuResponse(): got empty response to parse\n");
+        parsed.exeptionCode = E_PARSER_FAILED;
+        return parsed;
+    }
+
     parsed.slaveId = response.at(0);
     parsed.functionCode = response.at(1);
     parsed.payload = response.right(response.length() - 2);
 
     // exeption responses use reqest_functionCode + 0x80 as indication for errors
     if (parsed.functionCode >= 0x80){
-        // exeption codes are only one byte, if there are more ther must be an issue in parsing
+        // exeption codes are only one byte, if there are more there must be an issue in parsing
         if (parsed.payload.length() != 1){
             fprintf(stderr, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Failed to parse resonse. Response thought to be an OCU exeption but payload lengt is not 1.\n");
             parsed.exeptionCode = E_PARSER_FAILED;

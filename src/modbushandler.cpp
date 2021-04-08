@@ -74,7 +74,7 @@ QByteArray ModbusHandler::sendRawRequest(QByteArray request)
 
     if (m_isDryRun == true){
         fprintf(stdout, "ModbusHandler::sendRawRequest(): DRY RUN: 0x%s.\n", request.toHex().data());
-        return response;
+        return nullptr;
     }
 
     requestLength = modbus_send_raw_request(m_bus, (unsigned char*)request.constData(), request.length());
