@@ -24,8 +24,8 @@ signals:
 private:
     QString m_interface;
     bool m_isDryRun = false;
-    int m_baud = 19200;
-    char m_parity = 'E';
+    int m_baud = 9600;
+    char m_parity = 'N';
     int m_data_bit = 8;
     int m_stop_bit = 1;
 
