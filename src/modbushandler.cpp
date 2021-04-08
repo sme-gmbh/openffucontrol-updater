@@ -65,6 +65,11 @@ void ModbusHandler::setBaudRate(quint16 baudRate)
 {
     m_baud = baudRate;
 }
+
+void ModbusHandler::setParity(char parity)
+{
+    m_parity = parity;
+}
 // returns empty QByteArray if occurs, else the raw response to the request
 QByteArray ModbusHandler::sendRawRequest(QByteArray request)
 {
@@ -89,6 +94,5 @@ QByteArray ModbusHandler::sendRawRequest(QByteArray request)
         return response;
     }
     response = QByteArray::fromRawData((char*)rawResponse, requestLength);
-
     return response;
 }

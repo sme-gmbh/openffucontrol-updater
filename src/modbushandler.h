@@ -17,6 +17,7 @@ public:
     void close();
     void setSlaveAddress(quint16 adr);
     void setBaudRate(quint16 baudRate);
+    void setParity(char parity);
     QByteArray sendRawRequest(QByteArray request);
 
 signals:

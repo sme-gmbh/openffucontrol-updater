@@ -59,7 +59,14 @@ void MainController::parseArguments(QStringList arguments)
                              {{"t", "type"},
                                  QCoreApplication::translate("main", "Device type to inteface via modbus. Defaults to OCU. Supported: OCU"),
                                  QCoreApplication::translate("main", "device type")
-                             },
+                             },// modbus timout
+                             {{"bts", "byte-timeout-sec"},
+                                 QCoreApplication::translate("main", "Modbus byte timeout in seconds"),
+                                 QCoreApplication::translate("main", "timeout")
+                             },{{"btms", "byte-timeout-msec"},
+                                QCoreApplication::translate("main", "Modbus byte timeout in milliesconds"),
+                                QCoreApplication::translate("main", "timeout")
+                            },
                              // fully automatic update of device
                              {{"u", "update"},
                                  QCoreApplication::translate("main", "Updates device using the hex file via the modbus interface"),
@@ -78,6 +85,7 @@ void MainController::parseArguments(QStringList arguments)
        payload = QByteArray::fromHex( parser.value("payload").toLocal8Bit());
        slaveId = parser.value("slave").toUInt();
        deviceType = parser.value("type");
+//       mbusByteTimeoutMSec = parser.value("byte");
        update = parser.isSet("update");
 }
 // execute what is commanded by the user
@@ -87,6 +95,7 @@ void MainController::executeArguments()
     if (!modbusInterface.isEmpty()){
         m_modbushandler = new ModbusHandler(this, modbusInterface, isDryRun);
         m_modbushandler->setBaudRate(baudRate);
+//        m_modbushandler->setByteTimeout();
         if (!m_modbushandler->open()){
             fprintf(stderr, "Could not open modbus interface.\n");
             return;

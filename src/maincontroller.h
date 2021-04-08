@@ -29,6 +29,8 @@ private:
     QByteArray payload;
     quint8 slaveId = 0;
     QString deviceType;
+    quint32 mbusByteTimeoutSec = 0;
+    quint32 mbusByteTimeoutMSec = 0;
     bool update = false;
 
     void parseArguments(QStringList arguments);

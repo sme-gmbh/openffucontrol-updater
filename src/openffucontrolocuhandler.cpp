@@ -384,6 +384,8 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
 {
     ocuResponse parsed;
 
+    fprintf(stdout, "OpenFFUcontrolOCUhandler::parse(): Response to parse: 0x%s\n", response.toHex().data());
+
     if (response == nullptr && isDryRun){
         parsed.exeptionCode = E_ACKNOWLEDGE;
         return parsed;
