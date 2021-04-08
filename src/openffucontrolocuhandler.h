@@ -40,6 +40,8 @@ public:
 
     QString errorString(quint8 errorCode);
 
+    bool updateFirmware(quint8 slaveAddress, QByteArray application);
+
 private:
 
     typedef enum {  // OCU function codes

@@ -20,18 +20,21 @@ private:
     ModbusHandler* m_modbushandler;
     OpenFFUcontrolOCUhandler* m_ocuHandler;
 
-    quint8 functionCode;
-    bool isDryRun;
+    // set by commandline arguments
+    quint16 baudRate = 9600;
+    quint8 functionCode = 0;
+    bool isDryRun = false;
     QString modbusInterface;
     QString pathToHexfile;
     QByteArray payload;
-    quint8 slaveId;
+    quint8 slaveId = 0;
     QString deviceType;
+    bool update = false;
 
     void parseArguments(QStringList arguments);
     void executeArguments();
 
-    void parseIntelHex(QString file);
+    QByteArray getIntelHexContent(QString file);
 
 signals:
 

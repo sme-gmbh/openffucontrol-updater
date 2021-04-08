@@ -5,7 +5,7 @@ IntelHexParser::IntelHexParser(QObject *parent) : QObject(parent)
 {
 
 }
-// writes the program content of the hex file into the QByteArray program
+// writes the program content of the hex file into the QByteArray program at the postions the address field of the hex fiel states
 bool IntelHexParser::parse(QString file)
 {
     fprintf(stdout, "Parsing hexfile\n");
@@ -19,13 +19,13 @@ bool IntelHexParser::parse(QString file)
     quint64 extendetLinearAddress = 0;
 
     if(file.isEmpty())
-        return 1;
+        return false;
 
     QFile hexFile(file);
 
     if(!hexFile.open(QIODevice::ReadOnly | QIODevice::Text)){
         fprintf(stdout, "Unable to open File: %s\n", hexFile.errorString().toLocal8Bit().append("\0").data());
-        return 1;
+        return false;
     }
 
     qint64 currentLine = 1;
@@ -44,7 +44,7 @@ bool IntelHexParser::parse(QString file)
             fprintf(stdout, "line %ll not valid\n"
                             "aborting parse\n", &currentLine);
             hexFile.close();
-            return 1;
+            return false;
         }
 
         switch (parsedLine.entyType) {
@@ -60,7 +60,7 @@ bool IntelHexParser::parse(QString file)
             break;
         case START_SEGMENT_ADDRESS_RECORD:
             qDebug() << "Start Segment Address Record";
-            return 1;
+            return false;
             break;
         case EXTENDED_LINEAR_ADDRESS_RECORD:
             qDebug() << "Extendet Linear Address Record";
@@ -68,13 +68,13 @@ bool IntelHexParser::parse(QString file)
             break;
         case START_LINEAR_ADDRESS_RECORD:
             qDebug() << "Start Linear Address Record";
-            return 1;
+            return false;
             break;
         default:
             fprintf(stdout, "unrecognised entry type at line %ll\n"
                             "aborting parse\n", &currentLine);
             hexFile.close();
-            return 1;
+            return false;
 
         }
 
@@ -84,7 +84,7 @@ bool IntelHexParser::parse(QString file)
     hexFile.close();
 
     fprintf(stdout, "Parsing hexfile done\n");
-    return 0;
+    return true;
 }
 
 QByteArray IntelHexParser::content()

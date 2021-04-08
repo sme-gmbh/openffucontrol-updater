@@ -60,6 +60,11 @@ void ModbusHandler::setSlaveAddress(quint16 adr)
     }
     modbus_set_slave(m_bus, adr);
 }
+
+void ModbusHandler::setBaudRate(quint16 baudRate)
+{
+    m_baud = baudRate;
+}
 // returns empty QByteArray if occurs, else the raw response to the request
 QByteArray ModbusHandler::sendRawRequest(QByteArray request)
 {

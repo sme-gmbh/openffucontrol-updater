@@ -24,11 +24,12 @@ bool OpenFFUcontrolOCUhandler::auxEepromErase(quint8 slaveAddress)
     QByteArray request = createRequest(slaveAddress, OCU_AUX_EEPROM_ERASE);
     ocuResponse response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
 
-    if (response.exeptionCode == E_ACKNOWLEDGE){
-        return true;
+    if (response.exeptionCode != E_ACKNOWLEDGE){
+        fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromErase() failed: %s", errorString(response.exeptionCode).toLocal8Bit().data());
+        return false;
     }
 
-    return false;
+    return true;
 }
 // -1 written data not maching sent, 0 no issues, 0 < ocuExeptionCode
 int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data)
@@ -133,17 +134,17 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
 
     return data;
 }
-
+// returns 0 when sucsessfull, else OCU exeption code
 int OpenFFUcontrolOCUhandler::copyAuxEepromToFlash(quint8 slaveAddress)
 {
     QByteArray request = createRequest(slaveAddress, OCU_COPY_EEPROM_TO_FLASH);
     ocuResponse response = parseOCUResponse(m_modbusHander->sendRawRequest(request));
 
     if (response.exeptionCode == E_ACKNOWLEDGE){
-        return true;
+        return 0;
     }
 
-    return false;
+    return response.exeptionCode;
 }
 
 QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount)
@@ -354,6 +355,22 @@ QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)
     }
 
     return "Unnknown Error";
+}
+// returns true isf update was written succesfully
+bool OpenFFUcontrolOCUhandler::updateFirmware(quint8 slaveAddress, QByteArray application)
+{
+    // erase aux EEPROM before writng new firmware
+    if (!auxEepromErase(slaveAddress)){
+        return false;
+    }
+    if(auxEepromWrite(slaveAddress, 0, application) != 0){
+        return false;
+    }
+    // copy EEPROM into programm flash
+    if (copyAuxEepromToFlash(slaveAddress) != 0){
+        return false;
+    }
+    return true;
 }
 
 OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse(QByteArray response)
