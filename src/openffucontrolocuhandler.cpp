@@ -357,7 +357,7 @@ QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)
         break;
     }
 
-    return "Unnknown Error";
+    return "Unknown Error";
 }
 // returns true if update was written succesfully
 bool OpenFFUcontrolOCUhandler::updateFirmware(quint8 slaveAddress, QByteArray application)
@@ -398,10 +398,14 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     }
 
     parsed.slaveId = response.at(0);
+    fprintf(stdout, "Parsed slave ID: %i", parsed.slaveId);
     parsed.functionCode = response.at(1);
+    fprintf(stdout, "Parsed function code: %i", parsed.functionCode);
     response.remove(0, 2);
     parsed.payload = response.left(response.length() - 2);
+    fprintf(stdout, "Parsed payload: 0x%s", parsed.payload.toHex().data());
     parsed.crc = response.right(2).toUShort();
+    fprintf(stdout, "Parsed crc: %i", parsed.crc);
 
     // exeption responses use reqest_functionCode + 0x80 as indication for errors
     if (parsed.functionCode >= 0x80){
@@ -411,7 +415,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
             parsed.exeptionCode = E_PARSER_FAILED;
         } else {
             parsed.exeptionCode = response.at(2);
-            fprintf(stdout, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Error code recived: %i\n", parsed.exeptionCode);
+            fprintf(stdout, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Error code received: %i\n", parsed.exeptionCode);
         }
     }
 
