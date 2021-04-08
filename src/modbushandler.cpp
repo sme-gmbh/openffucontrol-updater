@@ -73,7 +73,6 @@ void ModbusHandler::setParity(char parity)
 // returns empty QByteArray if occurs, else the raw response to the request
 QByteArray ModbusHandler::sendRawRequest(QByteArray request)
 {
-    QByteArray response;
     quint8 rawResponse[MODBUS_RTU_MAX_ADU_LENGTH];
     int requestLength = -1;
 
@@ -85,14 +84,14 @@ QByteArray ModbusHandler::sendRawRequest(QByteArray request)
     requestLength = modbus_send_raw_request(m_bus, (unsigned char*)request.constData(), request.length());
     if (requestLength == -1){
         fprintf(stderr, "ModbusHandler::sendRawRequest(): Unable to send request. Libmodbus error: %s\n", modbus_strerror(errno));
-        return response;
+        return QByteArray();
     }
 
     requestLength = modbus_receive_confirmation(m_bus, rawResponse);
     if (requestLength == -1){
         fprintf(stderr, "ModbusHandler::sendRawRequest(): No response to sent request. Libmodbus error: %s\n", modbus_strerror(errno));
-        return response;
+        return QByteArray();
     }
-    response = QByteArray::fromRawData((char*)rawResponse, requestLength);
+    QByteArray response((char*)rawResponse, requestLength);
     return response;
 }

@@ -403,10 +403,10 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     parsed.slaveId = response.at(0);
     parsed.functionCode = response.at(1);
     parsed.payload = response.mid(2, response.length() - 4);
-    parsed.crc = response.right(2).toUShort();
+    parsed.crc = response.right(2).toUShort(nullptr, 10);
 
 
-    if(debug){
+    if (debug){
         fprintf(stdout, "DEBUG Parsed slave ID: %i\n", parsed.slaveId);
         fprintf(stdout, "DEBUG Parsed function code: %i\n", parsed.functionCode);
         fprintf(stdout, "DEBUG Parsed payload: 0x%s\n", parsed.payload.toHex().data());
