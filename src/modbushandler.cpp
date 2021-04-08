@@ -83,12 +83,12 @@ QByteArray ModbusHandler::sendRawRequest(QByteArray request)
         return response;
     }
 
-    modbus_receive_confirmation(m_bus, rawResponse);
+    requestLength = modbus_receive_confirmation(m_bus, rawResponse);
     if (requestLength == -1){
         fprintf(stderr, "ModbusHandler::sendRawRequest(): No response to sent request. Libmodbus error: %s\n", modbus_strerror(errno));
         return response;
     }
-    response = QByteArray::fromRawData((char*)rawResponse, MODBUS_RTU_MAX_ADU_LENGTH);
+    response = QByteArray::fromRawData((char*)rawResponse, requestLength);
 
     return response;
 }
