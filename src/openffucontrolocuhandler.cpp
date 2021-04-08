@@ -399,7 +399,9 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
 
     parsed.slaveId = response.at(0);
     parsed.functionCode = response.at(1);
-    parsed.payload = response.right(response.length() - 2);
+    response.remove(0, 2);
+    parsed.payload = response.left(response.length() - 2);
+    parsed.crc = response.right(2).toUShort();
 
     // exeption responses use reqest_functionCode + 0x80 as indication for errors
     if (parsed.functionCode >= 0x80){
