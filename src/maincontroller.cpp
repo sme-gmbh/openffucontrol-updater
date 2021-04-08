@@ -71,6 +71,10 @@ void MainController::parseArguments(QStringList arguments)
                              {{"u", "update"},
                                  QCoreApplication::translate("main", "Updates device using the hex file via the modbus interface"),
                              },
+                             // show debug output
+                             {{"v", "debug"},
+                                 QCoreApplication::translate("main", "show debug output"),
+                             },
 
        });
 
@@ -87,6 +91,7 @@ void MainController::parseArguments(QStringList arguments)
        deviceType = parser.value("type");
 //       mbusByteTimeoutMSec = parser.value("byte");
        update = parser.isSet("update");
+       debug = parser.isSet("debug");
 }
 // execute what is commanded by the user
 void MainController::executeArguments()
@@ -106,7 +111,7 @@ void MainController::executeArguments()
     }
 
     if (deviceType == "OCU" || deviceType.isEmpty()){
-        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler, isDryRun);
+        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler, isDryRun, debug);
         if (!payload.isEmpty()){
             fprintf(stdout, " --- Sending direct data ---\n\n");
             quint8 errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode, payload);

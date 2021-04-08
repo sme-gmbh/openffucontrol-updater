@@ -32,6 +32,7 @@ private:
     quint32 mbusByteTimeoutSec = 0;
     quint32 mbusByteTimeoutMSec = 0;
     bool update = false;
+    bool debug = false;
 
     void parseArguments(QStringList arguments);
     void executeArguments();

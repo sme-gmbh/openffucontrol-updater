@@ -1,6 +1,6 @@
 #include "openffucontrolocuhandler.h"
 
-OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler *modbushandler, bool dryRun)
+OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler *modbushandler, bool dryRun, bool debug)
 {
     m_modbusHander = modbushandler;
     isDryRun = dryRun;
@@ -384,7 +384,10 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
 {
     ocuResponse parsed;
 
-    fprintf(stdout, "OpenFFUcontrolOCUhandler::parse(): Response to parse: 0x%s\n", response.toHex().data());
+    if (debug){
+        QByteArray buffer = response;
+        fprintf(stdout, "DEBUG OpenFFUcontrolOCUhandler::parse(): Response to parse: 0x%s\n", buffer.toHex().data());
+    }
 
     if (response == nullptr && isDryRun){
         parsed.exeptionCode = E_ACKNOWLEDGE;
@@ -398,14 +401,17 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     }
 
     parsed.slaveId = response.at(0);
-    fprintf(stdout, "Parsed slave ID: %i", parsed.slaveId);
     parsed.functionCode = response.at(1);
-    fprintf(stdout, "Parsed function code: %i", parsed.functionCode);
-    response.remove(0, 2);
-    parsed.payload = response.left(response.length() - 2);
-    fprintf(stdout, "Parsed payload: 0x%s", parsed.payload.toHex().data());
+    parsed.payload = response.mid(2, response.length() - 4);
     parsed.crc = response.right(2).toUShort();
-    fprintf(stdout, "Parsed crc: %i", parsed.crc);
+
+
+    if(debug){
+        fprintf(stdout, "DEBUG Parsed slave ID: %i\n", parsed.slaveId);
+        fprintf(stdout, "DEBUG Parsed function code: %i\n", parsed.functionCode);
+        fprintf(stdout, "DEBUG Parsed payload: 0x%s\n", parsed.payload.toHex().data());
+        fprintf(stdout, "DEBUG Parsed crc: %i\n", parsed.crc);
+    }
 
     // exeption responses use reqest_functionCode + 0x80 as indication for errors
     if (parsed.functionCode >= 0x80){
