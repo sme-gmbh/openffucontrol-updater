@@ -191,11 +191,11 @@ QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 r
     return data;
 }
 // -1 written data not maching sent, 0 no issues, 0 < ocuExeptionCode
-int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint16 writeStartAddress, QByteArray data)
+int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data)
 {
     // payloads the OCU understands for writing must look like:
     //
-    // 2 byte           2 byte      not more than 128 byte
+    // 4 byte           2 byte      not more than 128 byte
     // start address    bytecount   data
 
     QByteArray payload;
@@ -206,7 +206,7 @@ int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint16 writeS
     // then the EEPROM page can be witten to from the beginning
     // this is an OCU limitation
     if(writeStartAddress % 128 != 0){
-        quint16 readFromAddress = writeStartAddress - (writeStartAddress % 128);
+        quint32 readFromAddress = writeStartAddress - (writeStartAddress % 128);
         QByteArray preWriteAddressData = intEepromRead(slaveAddress, readFromAddress, writeStartAddress % 128);
         data.prepend(preWriteAddressData);
     }
@@ -252,11 +252,11 @@ int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint16 writeS
     return 0;
 }
 
-QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint16 readStartAddress, quint64 byteCount)
+QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount)
 {
     // payloads the OCU understands for reading must look like:
     //
-    // 2 byte           2 byte
+    // 4 byte           2 byte
     // start address    bytecount no more than 128 byte
 
     QByteArray payload;
