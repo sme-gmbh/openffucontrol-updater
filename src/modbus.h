@@ -15,7 +15,7 @@ class ModBus : public QObject
 {
     Q_OBJECT
 public:
-    explicit ModBus(QObject *parent, QString interface);
+    explicit ModBus(QObject *parent, QString interface, bool debug = false);
     ~ModBus();
 
     bool open(qint32 baudrate = QSerialPort::Baud9600);
@@ -40,6 +40,7 @@ public:
 
 private:
     QString m_interface;
+    bool m_debug;
     QSerialPort* m_port;
     QByteArray m_readBuffer;
     QTimer m_requestTimer;  // This timer controlles timeout of telegrams with answer and sending timeslots for telegrams without answer

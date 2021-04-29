@@ -21,19 +21,17 @@ private:
     OpenFFUcontrolOCUhandler* m_ocuHandler;
 
     // set by commandline arguments
-    quint16 baudRate = 9600;
-    quint8 functionCode = 0;
-    bool isDryRun = false;
-    QString modbusInterface;
-    QString pathToHexfile;
-    QByteArray payload;
-    bool directDataSend = false;
-    quint8 slaveId = 0;
-    QString deviceType;
-//    quint32 mbusByteTimeoutSec = 0;
-//    quint32 mbusByteTimeoutMSec = 0;
-    bool update = false;
-    bool debug = false;
+    quint16 m_baudRate = 9600;
+    quint8 m_functionCode = 0;
+    bool m_isDryRun = false;
+    QString m_modbusInterface;
+    QString m_pathToHexfile;
+    QByteArray m_payload;
+    bool m_directDataSend = false;
+    quint8 m_slaveId = 0;
+    QString m_deviceType;
+    bool m_update = false;
+    bool m_debug = false;
 
     void parseArguments(QStringList arguments);
     void executeArguments();

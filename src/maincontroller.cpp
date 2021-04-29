@@ -63,14 +63,7 @@ void MainController::parseArguments(QStringList arguments)
                              {{"t", "type"},
                                  QCoreApplication::translate("main", "Device type to inteface via modbus. Defaults to OCU. Supported: OCU"),
                                  QCoreApplication::translate("main", "device type")
-                             },// modbus timout
-//                             {{"bts", "byte-timeout-sec"},
-//                                 QCoreApplication::translate("main", "Modbus byte timeout in seconds"),
-//                                 QCoreApplication::translate("main", "timeout")
-//                             },{{"btms", "byte-timeout-msec"},
-//                                QCoreApplication::translate("main", "Modbus byte timeout in milliesconds"),
-//                                QCoreApplication::translate("main", "timeout")
-//                            },
+                             },
                              // fully automatic update of device
                              {{"u", "update"},
                                  QCoreApplication::translate("main", "Updates device using the hex file via the modbus interface"),
@@ -85,27 +78,25 @@ void MainController::parseArguments(QStringList arguments)
        // Process the actual command line arguments given by the user
        parser.process(arguments);
 
-       baudRate = parser.value("baud").toShort();
-       functionCode = parser.value("functionCode").toUInt();
-       isDryRun = parser.isSet("dry-run");
-       pathToHexfile = parser.value("hexfile");
-       modbusInterface = parser.value("interface");
-       payload = QByteArray::fromHex( parser.value("payload").toLocal8Bit());
-       directDataSend = parser.isSet("direct-command");
-       slaveId = parser.value("slave").toUInt();
-       deviceType = parser.value("type");
-//       mbusByteTimeoutMSec = parser.value("byte");
-       update = parser.isSet("update");
-       debug = parser.isSet("debug");
+       m_baudRate = parser.value("baud").toShort();
+       m_functionCode = parser.value("functionCode").toUInt();
+       m_isDryRun = parser.isSet("dry-run");
+       m_pathToHexfile = parser.value("hexfile");
+       m_modbusInterface = parser.value("interface");
+       m_payload = QByteArray::fromHex( parser.value("payload").toLocal8Bit());
+       m_directDataSend = parser.isSet("direct-command");
+       m_slaveId = parser.value("slave").toUInt();
+       m_deviceType = parser.value("type");
+       m_update = parser.isSet("update");
+       m_debug = parser.isSet("debug");
 }
 // execute what is commanded by the user
 void MainController::executeArguments()
 {
     // execut arguments
-    if (!modbusInterface.isEmpty()){
-        m_modbushandler = new ModbusHandler(this, modbusInterface, isDryRun);
-        m_modbushandler->setBaudRate(baudRate);
-//        m_modbushandler->setByteTimeout();
+    if (!m_modbusInterface.isEmpty()){
+        m_modbushandler = new ModbusHandler(this, m_modbusInterface, m_isDryRun, m_debug);
+        m_modbushandler->setBaudRate(m_baudRate);
         if (!m_modbushandler->open()){
             fprintf(stderr, "Could not open modbus interface.\n");
             return;
@@ -115,35 +106,35 @@ void MainController::executeArguments()
         return;
     }
 
-    if (deviceType == "OCU" || deviceType.isEmpty()){
-        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler, isDryRun, debug);
-        if (update){
+    if (m_deviceType == "OCU" || m_deviceType.isEmpty()){
+        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler, m_isDryRun, m_debug);
+        if (m_update){
             fprintf(stdout, " --- Starting OCU Update ---\n\n");
-            if (pathToHexfile.isEmpty()){
+            if (m_pathToHexfile.isEmpty()){
                 fprintf(stdout, "For update please provide a hex file.\n");
             } else {
-                QByteArray program = getIntelHexContent(pathToHexfile);
+                QByteArray program = getIntelHexContent(m_pathToHexfile);
                 if (program == nullptr){
                     fprintf(stderr, "Hex file not readable.\n"
                                     "Update aborted.\n");
                     return;
                 }
-                if(m_ocuHandler->updateFirmware(slaveId, program)){
+                if(m_ocuHandler->updateFirmware(m_slaveId, program)){
                     fprintf(stdout, "Update sucsessfull\n");
                 } else{
                     fprintf(stdout, "Errors occured during update!\n"
                                     "Update might be written partialy, errors should be listed above.\n"
-                                    "Rebooting might lead to you walking over to number %i with a programmer.\n", slaveId);
+                                    "Rebooting might lead to you walking over to number %i with a programmer.\n", m_slaveId);
                     return;
                 }
             }
         } else {
             fprintf(stdout, " --- Sending direct data ---\n\n");
             quint8 errorCode = 0;
-            if (!payload.isEmpty()){
-                errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode, payload);
+            if (!m_payload.isEmpty()){
+                errorCode = m_ocuHandler->sendRawCommand(m_slaveId, m_functionCode, m_payload);
             } else {
-                errorCode = m_ocuHandler->sendRawCommand(slaveId, functionCode);
+                errorCode = m_ocuHandler->sendRawCommand(m_slaveId, m_functionCode);
             }
             if (errorCode != 0)
                 fprintf(stdout, "Direct data sent. Returend %s. Code %i\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data(), errorCode);
@@ -151,7 +142,7 @@ void MainController::executeArguments()
             return;
         }
     } else {
-        fprintf(stderr, "Unknown device type %s\n", deviceType.toLocal8Bit().data());
+        fprintf(stderr, "Unknown device type %s\n", m_deviceType.toLocal8Bit().data());
         return;
     }}
 

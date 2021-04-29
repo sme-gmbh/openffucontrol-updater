@@ -1,6 +1,5 @@
 QT -= gui
 QT += serialport testlib
-#Qt += serialbus
 
 CONFIG += c++11 console
 CONFIG -= app_bundle

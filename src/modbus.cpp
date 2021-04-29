@@ -1,8 +1,9 @@
 #include "modbus.h"
 
-ModBus::ModBus(QObject *parent, QString interface) : QObject(parent)
+ModBus::ModBus(QObject *parent, QString interface, bool debug) : QObject(parent)
 {
     m_interface = interface;
+    m_debug = debug;
     m_port = new QSerialPort(interface, this);
     m_transactionPending = false;
     m_currentTelegram = NULL;
@@ -184,7 +185,11 @@ void ModBus::writeTelegramRawNow(quint8 slaveAddress, quint8 functionCode, QByte
 
     if (m_port->isOpen())
     {
-        fprintf(stdout, "ModBus::writeTelegramRawNow: Writing: %s\n", out.toHex().data());
+        if (m_debug)
+        {
+            fprintf(stdout, "ModBus::writeTelegramRawNow: Writing: %s\n", out.toHex().data());
+            fflush(stdout);
+        }
         m_port->write(out);
         m_port->flush();
     }
@@ -195,8 +200,11 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     if (buffer->size() < 4)
         return;
 
-    fprintf(stdout, "ModBus::tryToParseResponseRaw: Reading: %s\n", buffer->toHex().data());
-    fflush(stdout);
+    if (m_debug)
+    {
+        fprintf(stdout, "ModBus::tryToParseResponseRaw: Reading: %s\n", buffer->toHex().data());
+        fflush(stdout);
+    }
 
     quint8 address = buffer->at(0);
     quint8 functionCode = buffer->at(1) & 0x7F;
