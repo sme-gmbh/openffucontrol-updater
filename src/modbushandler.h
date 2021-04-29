@@ -4,7 +4,8 @@
 #include <QDebug>
 #include <QObject>
 
-#include <modbus/modbus-rtu.h>
+//#include <modbus/modbus-rtu.h>
+#include "modbus.h"
 
 class ModbusHandler : public QObject
 {
@@ -15,7 +16,6 @@ public:
 
     bool open();
     void close();
-    void setSlaveAddress(quint16 adr);
     void setBaudRate(quint16 baudRate);
     void setParity(char parity);
     QByteArray sendRawRequest(QByteArray request);
@@ -30,7 +30,11 @@ private:
     int m_data_bit = 8;
     int m_stop_bit = 1;
 
-    modbus_t *m_bus;
+//    modbus_t *m_bus;
+
+//    QModbusRtuSerialMaster *m_busmaster;
+
+    ModBus *m_modbus;
 
 public slots:
 

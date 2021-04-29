@@ -191,7 +191,7 @@ QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 r
     return data;
 }
 // -1 written data not maching sent, 0 no issues, 0 < ocuExeptionCode
-int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data)
+int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint16 writeStartAddress, QByteArray data)
 {
     // payloads the OCU understands for writing must look like:
     //
@@ -252,7 +252,7 @@ int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint32 writeS
     return 0;
 }
 
-QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount)
+QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint16 readStartAddress, quint64 byteCount)
 {
     // payloads the OCU understands for reading must look like:
     //
@@ -392,7 +392,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
 
     if (isDebug){
         QByteArray buffer = response;
-        fprintf(stdout, "DEBUG OpenFFUcontrolOCUhandler::parse(): Response to parse: 0x%s\n", buffer.toHex().data());
+        fprintf(stdout, "DEBUG OpenFFUcontrolOCUhandler::parseOCUResponse(): Response to parse: 0x%s\n", buffer.toHex().data());
     }
 
     if (response == nullptr && isDryRun){
@@ -401,7 +401,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     }
 
     if (response.isEmpty()){
-        fprintf(stderr, "OpenFFUcontrollerOCUhandler::ocuResponse(): got empty response to parse\n");
+        fprintf(stderr, "OpenFFUcontrollerOCUhandler::parseOCUResponse(): got empty response to parse\n");
         parsed.exeptionCode = E_PARSER_FAILED;
         return parsed;
     }

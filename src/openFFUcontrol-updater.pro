@@ -1,4 +1,6 @@
 QT -= gui
+QT += serialport testlib
+#Qt += serialbus
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -11,7 +13,9 @@ SOURCES += \
         intelhexparser.cpp \
         main.cpp \
         maincontroller.cpp \
+        modbus.cpp \
         modbushandler.cpp \
+        modbustelegram.cpp \
         openffucontrolocuhandler.cpp
 
 # Default rules for deployment.
@@ -19,10 +23,12 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-LIBS     += -lmodbus
+//LIBS     += -lmodbus
 
 HEADERS += \
     intelhexparser.h \
     maincontroller.h \
+    modbus.h \
     modbushandler.h \
+    modbustelegram.h \
     openffucontrolocuhandler.h
