@@ -31,6 +31,11 @@ private:
     quint8 m_slaveId = 0;
     QString m_deviceType;
     bool m_update = false;
+    bool m_erase = false;           // memory erase
+    bool m_copy = false;            // memory copy
+    QString m_memory = "";          // memory type to apply operations to
+    quint32 m_memoryAddress = 0;    // start address for memory operations
+    quint64 m_byteCount = 0;        // byte count to read from memory
     bool m_debug = false;
 
     void parseArguments(QStringList arguments);

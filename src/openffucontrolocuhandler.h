@@ -71,6 +71,11 @@ private:
         E_PARSER_FAILED = 0xff
     } ParserExeptions;
 
+    typedef enum {
+        E_UNKNOWN_ERROR = -1,
+        E_NO_ERROR = 0x00,
+    } GenericErrors;
+
     struct ocuResponse{
         quint8 slaveId = 0;
         quint8 functionCode = 0;

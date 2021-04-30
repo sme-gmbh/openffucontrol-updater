@@ -21,7 +21,7 @@ void MainController::parseArguments(QStringList arguments)
        parser.addHelpOption();
 
        parser.addOptions({
-                             // function code for modbus command (-c, --functionCode)
+                             // baudrate for modbus interface (-b, --baud)
                              {{"b","baud"},
                                  QCoreApplication::translate("main", "baudrate of the modbus interface"),
                                  QCoreApplication::translate("main", "rate")
@@ -31,26 +31,44 @@ void MainController::parseArguments(QStringList arguments)
                                  QCoreApplication::translate("main", "function code sent to slaveID as uint8"),
                                  QCoreApplication::translate("main", "function code")
                              },
+                             // copy aux EEPROM to Flash
+                             {"copy",
+                                 QCoreApplication::translate("main", "copy aux EEPROM to Flash"),
+                             },
+                             // byte count for memory read operations
+                             {"count",
+                                 QCoreApplication::translate("main", "number of bytes for memory read operations"),
+                                 QCoreApplication::translate("main", "byte count")
+                             },
                              // do not write to modbus (-d, --dry-run)
                              {{"d","dry-run"},
                                  QCoreApplication::translate("main", "does not acces the Modbus interface")
+                             },
+                             //
+                             {"erase",
+                                 QCoreApplication::translate("main", "erases memory")
                              },
                              // modbus interface to use (-i, --interface)
                              {{"i","interface"},
                                  QCoreApplication::translate("main", "Modbus interface name to use"),
                                  QCoreApplication::translate("main", "interface name")
                              },
-                             // path to hexfile to be useds);
+                             // path to hexfile to be useds (--hf, --hexfile)
                              {{"hf", "hexfile"},
                                  QCoreApplication::translate("main", "Hex file to use"),
                                  QCoreApplication::translate("main", "file")
+                             },
+                             // name of memory
+                             {"memory",
+                                 QCoreApplication::translate("main", "memory to apply operatiosn to. SupportedauxEEPROM, intEEPROM, intFlash"),
+                                 QCoreApplication::translate("main", "memory name")
                              },
                              // data payload sent to slaveID under the function code (-p, --payload)
                              {{"p","payload"},
                                  QCoreApplication::translate("main", "data payload sent to --slaveID under --functionCode, data must be in hex without leading 0x and fit the function code, else corruption might occure. There are no checks to make shure the data fits to the function code!"),
                                  QCoreApplication::translate("main", "data")
                              },
-                             // send direct user command
+                             // send direct user command (-r, --direct-command)
                              {{"r","direct-command"},
                                  QCoreApplication::translate("main", "Sends function code and payload (if set) to slave"),
                              },
@@ -58,6 +76,11 @@ void MainController::parseArguments(QStringList arguments)
                              {{"s", "slave", "slave-ID"},
                                  QCoreApplication::translate("main", "Slave address as uint8 used to connect to --type device on --interface interface. Defaults to 0."),
                                  QCoreApplication::translate("main", "address")
+                             },
+                             // memory start address for operations
+                             {"startAddress",
+                                 QCoreApplication::translate("main", "memory start address for operation to start from"),
+                                 QCoreApplication::translate("main", "memory address")
                              },
                              // device type to interface
                              {{"t", "type"},
@@ -88,11 +111,18 @@ void MainController::parseArguments(QStringList arguments)
        m_slaveId = parser.value("slave").toUInt();
        m_deviceType = parser.value("type");
        m_update = parser.isSet("update");
+       m_erase = parser.isSet("erase");
+       m_copy = parser.isSet("copy");
+       m_memory = parser.value("memory");
+       m_memoryAddress = parser.value("startAddress").toUInt();
+       m_byteCount = parser.value("count").toULong();
        m_debug = parser.isSet("debug");
 }
 // execute what is commanded by the user
 void MainController::executeArguments()
 {
+    quint8 errorCode = 0;
+
     // execut arguments
     if (!m_modbusInterface.isEmpty()){
         m_modbus = new ModBus(this, m_modbusInterface, m_debug);    // create modbus handler
@@ -127,7 +157,52 @@ void MainController::executeArguments()
                     return;
                 }
             }
+        } else if (m_memory == "auxEEPROM") {       // external EEPROM commands
+
+            if (!m_payload.isEmpty()){
+                fprintf(stdout, " --- Writing aux EEPROM ---\n\n");
+                errorCode = m_ocuHandler->auxEepromWrite(m_slaveId, m_memoryAddress, m_payload);
+                fprintf(stdout, "Aux EEPROM write returned %s\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            } else if (m_byteCount != 0){
+                fprintf(stdout, " --- Reading aux EEPROM ---\n\n");
+                QByteArray readData = m_ocuHandler->auxEepromRead(m_slaveId, m_memoryAddress, m_byteCount);
+                fprintf(stdout, "Aux EEPROM read returned 0x%s\n", readData.toHex().data());
+            } else if (m_erase){
+                fprintf(stdout, " --- Erase aux EEPROM ---\n\n");
+                errorCode = m_ocuHandler->auxEepromErase(m_slaveId);
+                fprintf(stdout, "Aux EEPROM erase returned %s\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            }
+
+        } else if (m_memory == "intEEPROM") {       // internal EEPROM commands
+
+            if (!m_payload.isEmpty()){
+                fprintf(stdout, " --- Writing int EEPROM ---\n\n");
+                errorCode = m_ocuHandler->intEepromWrite(m_slaveId, m_memoryAddress, m_payload);
+                fprintf(stdout, "Int EEPROM write returned %s\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            } else if (m_byteCount != 0){
+                fprintf(stdout, " --- Reading int EEPROM ---\n\n");
+                QByteArray readData = m_ocuHandler->intEepromRead(m_slaveId, m_memoryAddress, m_byteCount);
+                fprintf(stdout, "Int EEPROM read returned 0x%s\n", readData.toHex().data());
+            }
+
+        } else if (m_memory == "intFlash") {       // internal EEPROM commands
+
+            if (m_byteCount != 0){
+                fprintf(stdout, " --- Reading int Flash ---\n\n");
+                QByteArray readData = m_ocuHandler->intEepromRead(m_slaveId, m_memoryAddress, m_byteCount);
+                fprintf(stdout, "Int Flash read returned 0x%s\n", readData.toHex().data());
+            } else if(m_copy){
+                fprintf(stdout, " --- Copy aux EEPROM to int Flash --- \n\n");
+                errorCode = m_ocuHandler->copyAuxEepromToFlash(m_slaveId);
+                fprintf(stdout, "Copy aux EEPROM to int Flash returned %s\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            }else if (m_erase){
+                fprintf(stdout, " --- Erase aux EEPROM ---\n\n");
+                errorCode = m_ocuHandler->intFlashErase(m_slaveId);
+                fprintf(stdout, "Int Flash erase returned %s\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data());
+            }
+
         } else {
+
             fprintf(stdout, " --- Sending direct data ---\n\n");
             quint8 errorCode = 0;
             if (!m_payload.isEmpty()){

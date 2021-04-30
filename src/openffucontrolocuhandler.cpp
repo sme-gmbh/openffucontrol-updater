@@ -18,7 +18,7 @@ quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 fun
 quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload)
 {
     if (isDebug)
-        fprintf(stdout, "OpenFFUcontrolOCUhandler::sendRawCommand() sending to slave %i functioncode %i payload %s", slaveAddress, functonCode, payload.toHex().data());
+        fprintf(stdout, "OpenFFUcontrolOCUhandler::sendRawCommand() sending to slave %i functioncode %i payload %s\n", slaveAddress, functonCode, payload.toHex().data());
     m_response = parseOCUResponse( m_modbus->sendRawRequestBlocking(slaveAddress, functonCode, payload));
     return m_response.exeptionCode;
 }
@@ -132,6 +132,11 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
     }
 
     return data;
+}
+
+int OpenFFUcontrolOCUhandler::intFlashErase(quint8 slaveAddress)
+{
+    return E_ILLEGAL_FUNCTION;
 }
 // returns 0 when sucsessfull, else OCU exeption code
 int OpenFFUcontrolOCUhandler::copyAuxEepromToFlash(quint8 slaveAddress)
@@ -301,6 +306,10 @@ void OpenFFUcontrolOCUhandler::bootApplication(quint8 slaveAddress)
 QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)
 {
     switch (errorCode) {
+    case E_UNKNOWN_ERROR:
+        return "unknown error";
+    case E_NO_ERROR:
+        return "no error";
     case E_ILLEGAL_FUNCTION:
         return "illegal function";
     case E_ILLEGAL_DATA_ADDRESS:
