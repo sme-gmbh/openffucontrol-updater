@@ -4,13 +4,13 @@
 #include <QObject>
 #include <QThread>
 
-#include "modbushandler.h"
+#include "modbus.h"
 
 class OpenFFUcontrolOCUhandler : public QObject
 {
     Q_OBJECT
 public:
-    explicit OpenFFUcontrolOCUhandler(QObject *parent, ModbusHandler* modbushandler, bool dryRun = false, bool debug = false);
+    explicit OpenFFUcontrolOCUhandler(QObject *parent, ModBus* modbus, bool dryRun = false, bool debug = false);
 
     quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode);
     quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload);
@@ -28,15 +28,12 @@ public:
     QByteArray intFlashRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount);
 
     // internal EEPROM options
-    int intEepromWrite(quint8 slaveAddress, quint16 writeStartAddress, QByteArray data);
-    QByteArray intEepromRead(quint8 slaveAddress, quint16 readStartAddress, quint64 byteCount);
+    int intEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data);
+    QByteArray intEepromRead(quint8 slaveAddress, quint32 readStartAddress, quint64 byteCount);
 
     // system properties
     bool systemBusy(quint8 slaveAddress);
     void bootApplication(quint8 slaveAddress);
-
-    QByteArray createRequest(quint8 slaveAddress, quint8 functionCode);
-    QByteArray createRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
 
     QString errorString(quint8 errorCode);
 
@@ -84,7 +81,7 @@ private:
 
     bool isDryRun = false;
     bool isDebug = false;
-    ModbusHandler* m_modbusHander;
+    ModBus* m_modbus;
     ocuResponse m_response;
 
     ocuResponse parseOCUResponse(QByteArray response);

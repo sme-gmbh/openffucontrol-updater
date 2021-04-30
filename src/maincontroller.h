@@ -6,7 +6,7 @@
 #include <QObject>
 
 #include "intelhexparser.h"
-#include "modbushandler.h"
+#include "modbus.h"
 #include "openffucontrolocuhandler.h"
 
 class MainController : public QObject
@@ -17,7 +17,7 @@ public:
     ~MainController();
 
 private:
-    ModbusHandler* m_modbushandler;
+    ModBus* m_modbus;
     OpenFFUcontrolOCUhandler* m_ocuHandler;
 
     // set by commandline arguments

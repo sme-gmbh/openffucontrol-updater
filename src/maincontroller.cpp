@@ -95,9 +95,8 @@ void MainController::executeArguments()
 {
     // execut arguments
     if (!m_modbusInterface.isEmpty()){
-        m_modbushandler = new ModbusHandler(this, m_modbusInterface, m_isDryRun, m_debug);
-        m_modbushandler->setBaudRate(m_baudRate);
-        if (!m_modbushandler->open()){
+        m_modbus = new ModBus(this, m_modbusInterface, m_debug);    // create modbus handler
+        if (!m_modbus->open(m_baudRate)){
             fprintf(stderr, "Could not open modbus interface.\n");
             return;
         }
@@ -106,16 +105,16 @@ void MainController::executeArguments()
         return;
     }
 
-    if (m_deviceType == "OCU" || m_deviceType.isEmpty()){
-        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbushandler, m_isDryRun, m_debug);
+    if (m_deviceType == "OCU" || m_deviceType.isEmpty()){       // Performe operations for device type OCU
+        m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbus, m_isDryRun, m_debug);
         if (m_update){
             fprintf(stdout, " --- Starting OCU Update ---\n\n");
             if (m_pathToHexfile.isEmpty()){
                 fprintf(stdout, "For update please provide a hex file.\n");
             } else {
-                QByteArray program = getIntelHexContent(m_pathToHexfile);
-                if (program == nullptr){
-                    fprintf(stderr, "Hex file not readable.\n"
+                QByteArray program = getIntelHexContent(m_pathToHexfile);   // get parsed hex file
+                if (program.isEmpty()){
+                    fprintf(stderr, "Hex file empty or not readable.\n"
                                     "Update aborted.\n");
                     return;
                 }
@@ -124,7 +123,7 @@ void MainController::executeArguments()
                 } else{
                     fprintf(stdout, "Errors occured during update!\n"
                                     "Update might be written partialy, errors should be listed above.\n"
-                                    "Rebooting might lead to you walking over to number %i with a programmer.\n", m_slaveId);
+                                    "Rebooting the ocu might lead to you walking over to number %i with a programmer.\n", m_slaveId);
                     return;
                 }
             }
@@ -150,7 +149,7 @@ QByteArray MainController::getIntelHexContent(QString file)
 {
     IntelHexParser parser;
     if(!parser.parse(file)){
-        return nullptr;
+        return QByteArray();
     }
     return parser.content();
 }

@@ -13,7 +13,6 @@ SOURCES += \
         main.cpp \
         maincontroller.cpp \
         modbus.cpp \
-        modbushandler.cpp \
         modbustelegram.cpp \
         openffucontrolocuhandler.cpp
 
@@ -28,6 +27,5 @@ HEADERS += \
     intelhexparser.h \
     maincontroller.h \
     modbus.h \
-    modbushandler.h \
     modbustelegram.h \
     openffucontrolocuhandler.h
