@@ -6,14 +6,7 @@ OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModBus *modb
     isDryRun = dryRun;
     isDebug = debug;
 }
-// returns ocuExeptionCode 0 if only data was sent
-quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode)
-{
-    if (isDebug)
-        fprintf(stdout, "OpenFFUcontrolOCUhandler::sendRawCommand() sending to slave %i functioncode %i\n", slaveAddress, functonCode);
-    m_response = parseOCUResponse( m_modbus->sendRawRequestBlocking(slaveAddress, functonCode, QByteArray()));
-    return m_response.exeptionCode;
-}
+
 // returns ocuExeptionCode 0 if only data was sent
 quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload)
 {
@@ -26,7 +19,7 @@ quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 fun
 bool OpenFFUcontrolOCUhandler::auxEepromErase(quint8 slaveAddress)
 {
     //QByteArray request = createRequest(slaveAddress, OCU_AUX_EEPROM_ERASE);
-    sendRawCommand(slaveAddress, OCU_AUX_EEPROM_ERASE);
+    sendRawCommand(slaveAddress, OCU_AUX_EEPROM_ERASE, QByteArray());
 
     if (m_response.exeptionCode != E_ACKNOWLEDGE){
         fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromErase() failed: %s\n", errorString(m_response.exeptionCode).toLocal8Bit().data());
@@ -136,7 +129,7 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
 // returns 0 when sucsessfull, else OCU exeption code
 int OpenFFUcontrolOCUhandler::copyAuxEepromToFlash(quint8 slaveAddress)
 {
-    sendRawCommand(slaveAddress, OCU_COPY_EEPROM_TO_FLASH);
+    sendRawCommand(slaveAddress, OCU_COPY_EEPROM_TO_FLASH, QByteArray());
 
     if (m_response.exeptionCode == E_ACKNOWLEDGE){
         return 0;
@@ -284,7 +277,7 @@ QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint32 
 // returns true if system is busy
 bool OpenFFUcontrolOCUhandler::systemBusy(quint8 slaveAddress)
 {
-    sendRawCommand(slaveAddress, OCU_STATUS_READ);
+    sendRawCommand(slaveAddress, OCU_STATUS_READ, QByteArray());
 
     if (m_response.exeptionCode == E_ACKNOWLEDGE){
         return false;
@@ -295,7 +288,7 @@ bool OpenFFUcontrolOCUhandler::systemBusy(quint8 slaveAddress)
 // Requests ocu application boot. OCU does not confirm the success.
 void OpenFFUcontrolOCUhandler::bootApplication(quint8 slaveAddress)
 {
-    sendRawCommand(slaveAddress, OCU_AUX_EEPROM_ERASE);
+    sendRawCommand(slaveAddress, OCU_AUX_EEPROM_ERASE, QByteArray());
 }
 
 QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)

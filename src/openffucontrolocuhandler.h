@@ -12,7 +12,6 @@ class OpenFFUcontrolOCUhandler : public QObject
 public:
     explicit OpenFFUcontrolOCUhandler(QObject *parent, ModBus* modbus, bool dryRun = false, bool debug = false);
 
-    quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode);
     quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload);
 
     // OCU Commands

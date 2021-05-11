@@ -133,7 +133,7 @@ void MainController::executeArguments()
             if (!m_payload.isEmpty()){
                 errorCode = m_ocuHandler->sendRawCommand(m_slaveId, m_functionCode, m_payload);
             } else {
-                errorCode = m_ocuHandler->sendRawCommand(m_slaveId, m_functionCode);
+                errorCode = m_ocuHandler->sendRawCommand(m_slaveId, m_functionCode, QByteArray());
             }
             if (errorCode != 0)
                 fprintf(stdout, "Direct data sent. Returend %s. Code %i\n", m_ocuHandler->errorString(errorCode).toLocal8Bit().data(), errorCode);
