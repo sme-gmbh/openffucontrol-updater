@@ -217,13 +217,25 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     if (exception)
     {
         if (buffer->size() < 5)
+        {
+            if (m_debug)
+            {
+                fprintf(stdout, "ModBus::tryToParseResponseRaw: Buffer size below 5 byte: %s\n", buffer->toHex().data());
+                fflush(stdout);
+            }
             return;
+        }
 
         quint8 exceptionCode = buffer->at(2);
         if (!checksumOK(*buffer))
         {
             buffer->clear();
             m_crc_errors++;
+            if (m_debug)
+            {
+                fprintf(stdout, "ModBus::tryToParseResponseRaw: Received exception and have CRC error.\n");
+                fflush(stdout);
+            }
             return;
         }
 
@@ -241,6 +253,11 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     if (buffer->length() > 255)
     {
         buffer->clear();
+        if (m_debug)
+        {
+            fprintf(stdout, "ModBus::tryToParseResponseRaw: Buffer overflow error.\n");
+            fflush(stdout);
+        }
         return;
     }
 
@@ -248,6 +265,11 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     {
         buffer->clear();
         m_crc_errors++;
+        if (m_debug)
+        {
+            fprintf(stdout, "ModBus::tryToParseResponseRaw: CRC error.\n");
+            fflush(stdout);
+        }
         return;
     }
 
@@ -261,6 +283,12 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     emit signal_responseRaw(m_currentTelegram->getID(), address, functionCode, data);
     parseResponse(m_currentTelegram->getID(), address, functionCode, data);
     emit signal_transactionFinished();
+
+    if (m_debug)
+    {
+        fprintf(stdout, "ModBus::tryToParseResponseRaw: Ok, sent data upstream.\n");
+        fflush(stdout);
+    }
 
     buffer->clear();
 }
