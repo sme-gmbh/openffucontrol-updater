@@ -23,7 +23,7 @@ ModBus::ModBus(QObject *parent, QString interface, bool debug) : QObject(parent)
 
     // This timer fires if receiver does not get any more bytes and telegram should be complete
     m_rxIdleTimer.setSingleShot(true);
-    m_rxIdleTimer.setInterval(50);
+    m_rxIdleTimer.setInterval(100);
     connect(&m_rxIdleTimer, SIGNAL(timeout()), this, SLOT(slot_rxIdleTimer_fired()));
 }
 
@@ -311,7 +311,7 @@ quint16 ModBus::checksum(QByteArray data)
         uint8_t crc_hi, crc_low;
 
         crc_hi = crc >> 8;
-        crc_low = (crc & 0xFF) ^ data.at(i);
+        crc_low = (crc & 0xFF) ^ (uint8_t)data.at(i);
         crc = (crc_hi << 8) | crc_low;
 
         for (quint8 j=0; j<=7; j++)
@@ -328,12 +328,20 @@ quint16 ModBus::checksum(QByteArray data)
 bool ModBus::checksumOK(QByteArray data)
 {
     quint16 crc = 0;
-    crc =  data.at(data.length() - 2);
-    crc += data.at(data.length() - 1) << 8;
+    crc = (uint8_t)data.at(data.length() - 2);
+    crc |= ((uint8_t)data.at(data.length() - 1)) << 8;
 
     data.remove(data.length() - 2, 2);
 
-    return (checksum(data) == crc);
+    quint16 crc_calculated = checksum(data);
+
+    if ((crc_calculated != crc) && m_debug)
+    {
+        fprintf(stdout, "ModBus::checksumOK: Read crc:       %#06x\nModBus::checksumOK: Calculated crc: %#06x\n", crc, crc_calculated);
+        fflush(stdout);
+    }
+
+    return (crc_calculated == crc);
 }
 
 void ModBus::slot_readyRead()
