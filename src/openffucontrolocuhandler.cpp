@@ -343,7 +343,7 @@ bool OpenFFUcontrolOCUhandler::updateFirmware(quint8 slaveAddress, QByteArray ap
         return false;
     }
     // write update to aux EEPROM
-    fprintf(stdout, "Writing update to auxiliary EEPROM\n");
+    fprintf(stdout, "Writing update to auxiliary EEPROM at slave %i\n", slaveAddress);
     if(auxEepromWrite(slaveAddress, 0, application) != 0){
         return false;
     }

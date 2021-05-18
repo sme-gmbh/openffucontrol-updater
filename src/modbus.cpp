@@ -2,6 +2,11 @@
 
 ModBus::ModBus(QObject *parent, QString interface, bool debug) : QObject(parent)
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::ModBus().\n");
+        fflush(stdout);
+    }
     m_interface = interface;
     m_debug = debug;
     m_port = new QSerialPort(interface, this);
@@ -12,18 +17,18 @@ ModBus::ModBus(QObject *parent, QString interface, bool debug) : QObject(parent)
 
     // This timer notifies about a telegram timeout if a unit does not answer
     m_requestTimer.setSingleShot(true);
-    m_requestTimer.setInterval(200);
+    m_requestTimer.setInterval(200);  // was 200
     connect(&m_requestTimer, SIGNAL(timeout()), this, SLOT(slot_requestTimer_fired()));
 
     // This timer delays tx after rx to wait for line clearance
     m_delayTxTimer.setSingleShot(true);
-    m_delayTxTimer.setInterval(4);
+    m_delayTxTimer.setInterval(4);  // was 4
     connect(this, SIGNAL(signal_transactionFinished()), &m_delayTxTimer, SLOT(start()));
     connect(&m_delayTxTimer, SIGNAL(timeout()), this, SLOT(slot_tryToSendNextTelegram()));
 
     // This timer fires if receiver does not get any more bytes and telegram should be complete
     m_rxIdleTimer.setSingleShot(true);
-    m_rxIdleTimer.setInterval(100);
+    m_rxIdleTimer.setInterval(100); // was 100
     connect(&m_rxIdleTimer, SIGNAL(timeout()), this, SLOT(slot_rxIdleTimer_fired()));
 }
 
@@ -32,10 +37,21 @@ ModBus::~ModBus()
     if (m_port->isOpen())
         this->close();
     delete m_port;
+
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::~ModBus().\n");
+        fflush(stdout);
+    }
 }
 
 bool ModBus::open(qint32 baudrate)
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::open().\n");
+        fflush(stdout);
+    }
     m_port->setBaudRate(baudrate);
     m_port->setDataBits(QSerialPort::Data8);
     m_port->setParity(QSerialPort::NoParity);
@@ -51,17 +67,32 @@ bool ModBus::open(qint32 baudrate)
 
 void ModBus::close()
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::close().\n");
+        fflush(stdout);
+    }
     if (m_port->isOpen())
         m_port->close();
 }
 
 quint64 ModBus::sendRawRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload)
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::sendRawRequest(). +++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+        fflush(stdout);
+    }
     return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
 QByteArray ModBus::sendRawRequestBlocking(quint8 slaveAddress, quint8 functionCode, QByteArray payload)
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::sendRawRequestBlocking(). +++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+        fflush(stdout);
+    }
     QSignalSpy spy(this, SIGNAL(signal_responseRawComplete(quint64, QByteArray)));
 
     writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
@@ -77,42 +108,76 @@ QByteArray ModBus::sendRawRequestBlocking(quint8 slaveAddress, quint8 functionCo
 
 quint64 ModBus::readRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count)
 {
-
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::readRegisters().\n");
+        fflush(stdout);
+    }
 }
 
 quint64 ModBus::writeRegisters(quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data)
 {
-
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeRegisters().\n");
+        fflush(stdout);
+    }
 }
 
 quint16 ModBus::readRegister(quint8 slaveAddress, quint16 dataAddress)
 {
-
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::readRegister().\n");
+        fflush(stdout);
+    }
 }
 
 quint16 ModBus::writeRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data)
 {
-
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeRegister().\n");
+        fflush(stdout);
+    }
 }
 
 quint64 ModBus::readDiscreteInput(quint8 slaveAddress, quint16 dataAddress)
 {
-
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::readDiscreteInput().\n");
+        fflush(stdout);
+    }
 }
 
 quint64 ModBus::writeCoil(quint8 slaveAddress, quint16 dataAddress, quint8 bit, bool data)
 {
-
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeCoil().\n");
+        fflush(stdout);
+    }
 }
 
 void ModBus::slot_tryToSendNextTelegram()
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::slot_tryToSendNextTelegram().\n");
+        fflush(stdout);
+    }
     m_telegramQueueMutex.lock();
     // Delete last telegram if it exists
     // If repeat counter is not zero, then repeat current telegram, otherwise take new
     // telegram from the queue
     if ((m_currentTelegram != NULL) && (m_currentTelegram->repeatCount == 0))
     {
+        if (m_debug)
+        {
+            fprintf(stdout, "DEBUG ModBus::slot_tryToSendNextTelegram: Deleting Telegram.\n");
+            fflush(stdout);
+        }
         delete m_currentTelegram;
         m_currentTelegram = NULL;
     }
@@ -121,12 +186,24 @@ void ModBus::slot_tryToSendNextTelegram()
     {
         if (m_telegramQueue.isEmpty())
         {
+            if (m_debug)
+            {
+                fprintf(stdout, "DEBUG ModBus::slot_tryToSendNextTelegram: telegramQueue empty.\n");
+                fflush(stdout);
+            }
+            m_transactionPending = false;
             m_telegramQueueMutex.unlock();
             return;
+        }
+        if (m_debug)
+        {
+            fprintf(stdout, "DEBUG ModBus::slot_tryToSendNextTelegram: Fetching new telegram from queue.\n");
+            fflush(stdout);
         }
         m_currentTelegram = m_telegramQueue.takeFirst();
     }
 
+    m_transactionPending = true;
     m_requestTimer.start();
     m_telegramQueueMutex.unlock();
 
@@ -135,17 +212,35 @@ void ModBus::slot_tryToSendNextTelegram()
 
 quint64 ModBus::writeTelegramToQueue(ModBusTelegram *telegram)
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeTelegramToQueue().\n");
+        fflush(stdout);
+    }
     quint64 telegramID = telegram->getID();
     m_telegramQueueMutex.lock();
     m_telegramQueue.append(telegram);
 
-    if (!m_requestTimer.isActive()) // If we inserted the first packet, we have to start the sending process
+//    if (!m_requestTimer.isActive()) // If we inserted the first packet, we have to start the sending process
+    if (!m_transactionPending) // If we inserted the first packet, we have to start the sending process
     {
+        if (m_debug)
+        {
+            fprintf(stdout, "DEBUG ModBus::writeTelegramToQueue(): Actively starting send queue.\n");
+            fflush(stdout);
+        }
         m_telegramQueueMutex.unlock();
         slot_tryToSendNextTelegram();
     }
     else
+    {
+        if (m_debug)
+        {
+            fprintf(stdout, "DEBUG ModBus::writeTelegramToQueue(): Appended telegram to already running queue.\n");
+            fflush(stdout);
+        }
         m_telegramQueueMutex.unlock();
+    }
 
     return telegramID;
 }
@@ -162,6 +257,11 @@ quint64 ModBus::crc_errors() const
 
 quint64 ModBus::writeTelegramNow(ModBusTelegram *telegram)
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeTelegramNow().\n");
+        fflush(stdout);
+    }
     quint8 slaveAddress = telegram->slaveAddress;
     quint8 functionCode = telegram->functionCode;
     QByteArray data = telegram->data;
@@ -173,6 +273,11 @@ quint64 ModBus::writeTelegramNow(ModBusTelegram *telegram)
 
 void ModBus::writeTelegramRawNow(quint8 slaveAddress, quint8 functionCode, QByteArray data)
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeTelegramRawNow().\n");
+        fflush(stdout);
+    }
     QByteArray out;
 
     out.append(slaveAddress);
@@ -204,6 +309,17 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     {
         fprintf(stdout, "ModBus::tryToParseResponseRaw: Reading: %s\n", buffer->toHex().data());
         fflush(stdout);
+    }
+
+    if (m_currentTelegram == nullptr)
+    {
+        if (m_debug)
+        {
+            fprintf(stdout, "ModBus::tryToParseResponseRaw: Response does not belong to a request. Parse abort.\n");
+            fflush(stdout);
+        }
+        buffer->clear();
+        return;
     }
 
     quint8 address = buffer->at(0);
@@ -241,6 +357,13 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
 
         m_requestTimer.stop();
         m_rx_telegrams++;
+
+        if (m_debug)
+        {
+            fprintf(stdout, "ModBus::tryToParseResponseRaw: Got exception, sending it upstream.\n");
+            fflush(stdout);
+        }
+
         // Parse exception here and send signal!
         emit signal_exception(m_currentTelegram->getID(), exceptionCode);
         emit signal_responseRawComplete(m_currentTelegram->getID(), *buffer);
@@ -279,23 +402,27 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     m_rx_telegrams++;
     QByteArray data = buffer->mid(2, buffer->length() - 4); // Fill data with PDU
 
+    if (m_debug)
+    {
+        fprintf(stdout, "ModBus::tryToParseResponseRaw: Ok, sending data upstream.\n");
+        fflush(stdout);
+    }
+
     emit signal_responseRawComplete(m_currentTelegram->getID(), *buffer);
     emit signal_responseRaw(m_currentTelegram->getID(), address, functionCode, data);
     parseResponse(m_currentTelegram->getID(), address, functionCode, data);
     emit signal_transactionFinished();
-
-    if (m_debug)
-    {
-        fprintf(stdout, "ModBus::tryToParseResponseRaw: Ok, sent data upstream.\n");
-        fflush(stdout);
-    }
 
     buffer->clear();
 }
 
 void ModBus::parseResponse(quint64 id, quint8 slaveAddress, quint8 functionCode, QByteArray data)
 {
-
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::parseResponse().\n");
+        fflush(stdout);
+    }
 }
 
 quint16 ModBus::checksum(QByteArray data)
@@ -357,6 +484,11 @@ void ModBus::slot_readyRead()
 
 void ModBus::slot_requestTimer_fired()
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::slot_requestTimer_fired().\n");
+        fflush(stdout);
+    }
     if (m_currentTelegram->needsAnswer())
     {
         emit signal_transactionLost(m_currentTelegram->getID());
@@ -369,5 +501,10 @@ void ModBus::slot_requestTimer_fired()
 
 void ModBus::slot_rxIdleTimer_fired()
 {
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::slot_rxIdleTimer_fired().\n");
+        fflush(stdout);
+    }
     tryToParseResponseRaw(&m_readBuffer);
 }
