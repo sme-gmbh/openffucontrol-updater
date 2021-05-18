@@ -55,23 +55,11 @@ private:
     } OCUfunctionCodes;
 
     typedef enum {
-        E_ILLEGAL_FUNCTION = 0x01,
-        E_ILLEGAL_DATA_ADDRESS = 0x02,
-        E_ILLEGAL_DATA_VALUE = 0x03,
-        E_SERVER_DEVICE_FAILURE = 0x04,
-        E_ACKNOWLEDGE = 0x05,
-        E_SERVER_DEVICE_BUSY = 0x06,
-        E_MEMORY_PARITY_ERROR = 0x08,
-        E_GATEWAY_PATH_UNAVAILABLE = 0x0a,
-        E_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND = 0x0b
-    } ocuExeptionCode;
-
-    typedef enum {
         E_PARSER_FAILED = 0xff
     } ParserExeptions;
 
     typedef enum {
-        E_UNKNOWN_ERROR = -1,
+        E_UNKNOWN_ERROR = 0xfe,
         E_NO_ERROR = 0x00,
     } GenericErrors;
 
@@ -89,6 +77,8 @@ private:
     ocuResponse m_response;
 
     ocuResponse parseOCUResponse(QByteArray response);
+    QByteArray assembleAddressHeader(quint64 startAddress, quint16 byteCount);
+    void waitForOCU(quint8 slaveAddress);
 
 signals:
 

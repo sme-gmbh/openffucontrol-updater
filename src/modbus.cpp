@@ -255,6 +255,32 @@ quint64 ModBus::crc_errors() const
     return m_crc_errors;
 }
 
+QString ModBus::exceptionToText(quint8 exceptionCode)
+{
+    switch (exceptionCode)
+    {
+        case 0x01: return QString("E_ILLEGAL_FUNCTION");
+        break;
+        case 0x02: return QString("E_ILLEGAL_DATA_ADDRESS");
+        break;
+        case 0x03: return QString("E_ILLEGAL_DATA_VALUE");
+        break;
+        case 0x04: return QString("E_SERVER_DEVICE_FAILURE");
+        break;
+        case 0x05: return QString("E_ACKNOWLEDGE");
+        break;
+        case 0x06: return QString("E_SERVER_DEVICE_BUSY");
+        break;
+        case 0x08: return QString("E_MEMORY_PARITY_ERROR");
+        break;
+        case 0x0a: return QString("E_GATEWAY_PATH_UNAVAILABLE");
+        break;
+        case 0x0b: return QString("E_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND");
+        break;
+        default: return QString("E_UNKNOWN");
+    }
+}
+
 quint64 ModBus::writeTelegramNow(ModBusTelegram *telegram)
 {
     if (m_debug)

@@ -21,10 +21,12 @@ bool OpenFFUcontrolOCUhandler::auxEepromErase(quint8 slaveAddress)
     //QByteArray request = createRequest(slaveAddress, OCU_AUX_EEPROM_ERASE);
     sendRawCommand(slaveAddress, OCU_AUX_EEPROM_ERASE, QByteArray());
 
-    if (m_response.exeptionCode != E_ACKNOWLEDGE){
+    if (m_response.exeptionCode != ModBusTelegram::E_ACKNOWLEDGE){
         fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromErase() failed: %s\n", errorString(m_response.exeptionCode).toLocal8Bit().data());
         return false;
     }
+
+    waitForOCU(slaveAddress);
 
     return true;
 }
@@ -35,8 +37,6 @@ int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeS
     //
     // 4 byte           2 byte      not more than 128 byte
     // start address    bytecount   data
-
-    QByteArray payload;
 
     // if addres to write to is not a page start address, existing data must be read and prepended
     // then the EEPROM page can be witten to from the beginning
@@ -57,28 +57,24 @@ int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeS
             byteCount = data.length();
         }
 
-        // assemble payload
-        payload.append(writeStartAddress);
-        payload.append(byteCount);
-        payload.append(data.left(byteCount));
+        QByteArray payload;
+        payload = assembleAddressHeader(writeStartAddress, byteCount);
+        payload += data.left(byteCount);
 
         // send data to write to the OCU
         sendRawCommand(slaveAddress, OCU_AUX_EEPROM_WRITE, payload);
 
         // OCU must confirm transmition with ACK
-        if (m_response.exeptionCode != E_ACKNOWLEDGE){
+        if (m_response.exeptionCode != ModBusTelegram::E_ACKNOWLEDGE){
             fprintf(stderr, "OpenFFUcontrollOCUhandler::auxEepromWrite() failed to write: %s\n", errorString(m_response.exeptionCode).toLocal8Bit().data());
             return m_response.exeptionCode;
         }
 
-        // wait for OCU to write page
-        for(; systemBusy(slaveAddress) ;){
-            QThread::msleep(100);
-        }
+        waitForOCU(slaveAddress);
 
         //read back and compare written data with sent data
         if (data.left(byteCount) != auxEepromRead(slaveAddress, writeStartAddress, byteCount)){
-                fprintf(stderr, "OpneFFUcontrollerOCUhandler::auxEepromWrite(): EEPROM data read back does NOT match data sent.");
+                fprintf(stderr, "OpenFFUcontrollerOCUhandler::auxEepromWrite(): EEPROM data read back does NOT match data sent.\n");
                 return -1;
         }
 
@@ -95,7 +91,6 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
     // 4 byte           2 byte
     // start address    bytecount no more than 128 byte
 
-    QByteArray payload;
     QByteArray data;
 
     quint8 requestByteCount = 0;
@@ -110,8 +105,8 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
         }
         requestReadAddress = readStartAddress + i * 128;
 
-        payload.append(requestReadAddress);
-        payload.append(requestByteCount);
+        QByteArray payload;
+        payload = assembleAddressHeader(requestReadAddress, requestByteCount);
 
         sendRawCommand(slaveAddress, OCU_AUX_EEPROM_READ, payload);
 
@@ -120,8 +115,6 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
             return NULL;
         }
         data.append(m_response.payload);
-
-        payload.clear();
     }
 
     return data;
@@ -129,16 +122,19 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
 
 int OpenFFUcontrolOCUhandler::intFlashErase(quint8 slaveAddress)
 {
-    return E_ILLEGAL_FUNCTION;
+    return ModBusTelegram::E_ILLEGAL_FUNCTION;
 }
+
 // returns 0 when sucsessfull, else OCU exeption code
 int OpenFFUcontrolOCUhandler::copyAuxEepromToFlash(quint8 slaveAddress)
 {
     sendRawCommand(slaveAddress, OCU_COPY_EEPROM_TO_FLASH, QByteArray());
 
-    if (m_response.exeptionCode == E_ACKNOWLEDGE){
+    if (m_response.exeptionCode == ModBusTelegram::E_ACKNOWLEDGE){
         return 0;
     }
+
+    waitForOCU(slaveAddress);
 
     return m_response.exeptionCode;
 }
@@ -150,7 +146,6 @@ QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 r
     // 4 byte           2 byte
     // start address    bytecount no more than 128 byte
 
-    QByteArray payload;
     QByteArray data;
 
     quint8 requestByteCount = 0;
@@ -165,8 +160,8 @@ QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 r
         }
         requestReadAddress = readStartAddress + i * 128;
 
-        payload.append(requestReadAddress);
-        payload.append(requestByteCount);
+        QByteArray payload;
+        payload = assembleAddressHeader(requestReadAddress, requestByteCount);
 
         sendRawCommand(slaveAddress, OCU_INT_FLASH_READ, payload);
 
@@ -175,12 +170,11 @@ QByteArray OpenFFUcontrolOCUhandler::intFlashRead(quint8 slaveAddress, quint32 r
             return NULL;
         }
         data.append(m_response.payload);
-
-        payload.clear();
     }
 
     return data;
 }
+
 // -1 written data not maching sent, 0 no issues, 0 < ocuExeptionCode
 int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint32 writeStartAddress, QByteArray data)
 {
@@ -188,8 +182,6 @@ int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint32 writeS
     //
     // 4 byte           2 byte      not more than 128 byte
     // start address    bytecount   data
-
-    QByteArray payload;
 
     // if addres to write to is not a page start address, existing data must be read and prepended
     // then the EEPROM page can be witten to from the beginning
@@ -210,28 +202,24 @@ int OpenFFUcontrolOCUhandler::intEepromWrite(quint8 slaveAddress, quint32 writeS
             byteCount = data.length();
         }
 
-        // assemble payload
-        payload.append(writeStartAddress);
-        payload.append(byteCount);
-        payload.append(data.left(byteCount));
+        QByteArray payload;
+        payload = assembleAddressHeader(writeStartAddress, byteCount);
+        payload += data.left(byteCount);
 
         // send data to write to the OCU
         sendRawCommand(slaveAddress, OCU_INT_EEPROM_WRITE, payload);
 
         // OCU must confirm transmition with ACK
-        if (m_response.exeptionCode != E_ACKNOWLEDGE){
+        if (m_response.exeptionCode != ModBusTelegram::E_ACKNOWLEDGE){
             fprintf(stderr, "OpenFFUcontrollOCUhandler::intEepromWrite() failed to write: %s\n", errorString(m_response.exeptionCode).toLocal8Bit().data());
             return m_response.exeptionCode;
         }
 
-        // wait for OCU to write page
-        for(; systemBusy(slaveAddress) ;){
-            QThread::msleep(100);
-        }
+        waitForOCU(slaveAddress);
 
         //read back and compare written data with sent data
         if (data.left(byteCount) != intEepromRead(slaveAddress, writeStartAddress, byteCount)){
-                fprintf(stderr, "OpneFFUcontrollerOCUhandler::intEepromWrite(): EEPROM data read back does NOT match data sent.");
+                fprintf(stderr, "OpenFFUcontrollerOCUhandler::intEepromWrite(): EEPROM data read back does NOT match data sent.\n");
                 return -1;
         }
 
@@ -248,7 +236,6 @@ QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint32 
     // 4 byte           2 byte
     // start address    bytecount no more than 128 byte
 
-    QByteArray payload;
     QByteArray data;
 
     quint8 requestByteCount = 0;
@@ -263,13 +250,13 @@ QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint32 
         }
         requestReadAddress = readStartAddress + i * 128;
 
-        payload.append(requestReadAddress);
-        payload.append(requestByteCount);
+        QByteArray payload;
+        payload = assembleAddressHeader(requestReadAddress, requestByteCount);
 
-        sendRawCommand(slaveAddress, OCU_INT_FLASH_READ, payload);
+        sendRawCommand(slaveAddress, OCU_INT_EEPROM_READ, payload);
 
         if(m_response.exeptionCode != 0){
-            fprintf(stderr, "OpenFFUcontrollOCUhandler::intFlashRead() failed to read %i bytes at address %i: %s\n", requestByteCount, requestReadAddress, errorString(m_response.exeptionCode).toLocal8Bit().data());
+            fprintf(stderr, "OpenFFUcontrollOCUhandler::intEepromRead() failed to read %i bytes at address %i: %s\n", requestByteCount, requestReadAddress, errorString(m_response.exeptionCode).toLocal8Bit().data());
             return NULL;
         }
         data.append(m_response.payload);
@@ -279,21 +266,23 @@ QByteArray OpenFFUcontrolOCUhandler::intEepromRead(quint8 slaveAddress, quint32 
 
     return data;
 }
+
 // returns true if system is busy
 bool OpenFFUcontrolOCUhandler::systemBusy(quint8 slaveAddress)
 {
     sendRawCommand(slaveAddress, OCU_STATUS_READ, QByteArray());
 
-    if (m_response.exeptionCode == E_ACKNOWLEDGE){
+    if (m_response.exeptionCode == ModBusTelegram::E_ACKNOWLEDGE){
         return false;
     }
 
     return true;
 }
+
 // Requests ocu application boot. OCU does not confirm the success.
 void OpenFFUcontrolOCUhandler::bootApplication(quint8 slaveAddress)
 {
-    sendRawCommand(slaveAddress, OCU_AUX_EEPROM_ERASE, QByteArray());
+    sendRawCommand(slaveAddress, OCU_BOOT_APPLICATION, QByteArray());
 }
 
 QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)
@@ -303,23 +292,23 @@ QString OpenFFUcontrolOCUhandler::errorString(quint8 errorCode)
         return "unknown error";
     case E_NO_ERROR:
         return "no error";
-    case E_ILLEGAL_FUNCTION:
+    case ModBusTelegram::E_ILLEGAL_FUNCTION:
         return "illegal function";
-    case E_ILLEGAL_DATA_ADDRESS:
+    case ModBusTelegram::E_ILLEGAL_DATA_ADDRESS:
         return "illegal data addres";
-    case E_ILLEGAL_DATA_VALUE:
+    case ModBusTelegram::E_ILLEGAL_DATA_VALUE:
         return "illegal data value";
-    case E_SERVER_DEVICE_FAILURE:
+    case ModBusTelegram::E_SERVER_DEVICE_FAILURE:
         return "sever device failure";
-    case E_ACKNOWLEDGE:
+    case ModBusTelegram::E_ACKNOWLEDGE:
         return "acknowledge";
-    case E_SERVER_DEVICE_BUSY:
+    case ModBusTelegram::E_SERVER_DEVICE_BUSY:
         return "davice busy";
-    case E_MEMORY_PARITY_ERROR:
+    case ModBusTelegram::E_MEMORY_PARITY_ERROR:
         return "memory parity error";
-    case E_GATEWAY_PATH_UNAVAILABLE:
+    case ModBusTelegram::E_GATEWAY_PATH_UNAVAILABLE:
         return "gateway path unavailable";
-    case E_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND:
+    case ModBusTelegram::E_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND:
         return "gateway target device faield to respond";
     case E_PARSER_FAILED:
         return "response parser failed";
@@ -365,7 +354,7 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     }
 
     if (response == nullptr && isDryRun){
-        parsed.exeptionCode = E_ACKNOWLEDGE;
+        parsed.exeptionCode = ModBusTelegram::E_ACKNOWLEDGE;
         return parsed;
     }
 
@@ -375,30 +364,54 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
         return parsed;
     }
 
-    parsed.slaveId = response.at(0);
-    parsed.functionCode = response.at(1);
+    parsed.slaveId = (quint8)response.at(0);
+    parsed.functionCode = (quint8)response.at(1) & 0x7F;
     parsed.payload = response.mid(2, response.length() - 4);
-    parsed.crc = response.right(2).toUShort(nullptr, 10);
+//    parsed.crc = response.right(2).toUShort(nullptr, 10);
 
 
     if (isDebug){
         fprintf(stdout, "DEBUG Parsed slave ID: %i\n", parsed.slaveId);
         fprintf(stdout, "DEBUG Parsed function code: %i\n", parsed.functionCode);
         fprintf(stdout, "DEBUG Parsed payload: 0x%s\n", parsed.payload.toHex().data());
-        fprintf(stdout, "DEBUG Parsed crc: %i\n", parsed.crc);
+//        fprintf(stdout, "DEBUG Parsed crc: %i\n", parsed.crc);
     }
 
-    // exeption responses use reqest_functionCode + 0x80 as indication for errors
-    if (parsed.functionCode >= 0x80){
+    // exeption responses use request_functionCode + 0x80 as indication for errors
+    if ((quint8)response.at(1) & 0x80){
         // exeption codes are only one byte, if there are more there must be an issue in parsing
         if (parsed.payload.length() != 1){
             fprintf(stderr, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Failed to parse resonse. Response thought to be an OCU exeption but payload lengt is not 1.\n");
             parsed.exeptionCode = E_PARSER_FAILED;
         } else {
-            parsed.exeptionCode = response.at(2);
-            fprintf(stdout, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Error code received: %i\n", parsed.exeptionCode);
+            parsed.exeptionCode = (quint8)response.at(2);
+            if (isDebug) {
+                fprintf(stdout, "OpenFFUcontrolOCUhandler::parseOCUResponse(): Exception code received: %s\n", errorString(parsed.exeptionCode).toUtf8().data());
+            }
         }
     }
 
     return parsed;
+}
+
+QByteArray OpenFFUcontrolOCUhandler::assembleAddressHeader(quint64 startAddress, quint16 byteCount)
+{
+    QByteArray a;
+    a.append((startAddress >> 24) & 0xFF);
+    a.append((startAddress >> 16) & 0xFF);
+    a.append((startAddress >>  8) & 0xFF);
+    a.append((startAddress >>  0) & 0xFF);
+    a.append((byteCount >> 8) & 0xFF);
+    a.append((byteCount >> 0) & 0xFF);
+    return a;
+}
+
+void OpenFFUcontrolOCUhandler::waitForOCU(quint8 slaveAddress)
+{
+    fprintf(stdout, "Waiting for OCU.");
+    while(systemBusy(slaveAddress)){
+        QThread::msleep(500);
+        fprintf(stdout, ".");
+    }
+    fprintf(stdout, "\nOCU ready.\n");
 }

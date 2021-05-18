@@ -38,6 +38,7 @@ public:
     quint64 rx_telegrams() const;
     quint64 crc_errors() const;
 
+    QString exceptionToText(quint8 exceptionCode);
 private:
     QString m_interface;
     bool m_debug;
