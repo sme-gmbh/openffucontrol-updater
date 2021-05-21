@@ -42,10 +42,13 @@ int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeS
     // then the EEPROM page can be witten to from the beginning
     // this is an OCU limitation
     if(writeStartAddress % 128 != 0){
+        fprintf(stdout, "Writing %5i bytes non-aligned at 0x%06x\n", data.length(), writeStartAddress);
         quint32 readFromAddress = writeStartAddress - (writeStartAddress % 128);
         QByteArray preWriteAddressData = auxEepromRead(slaveAddress, readFromAddress, writeStartAddress % 128 - 1);
         data.prepend(preWriteAddressData);
         writeStartAddress = readFromAddress;    // set start address to match new data + write data
+    } else {
+        fprintf(stdout, "Writing %5i bytes aligned at 0x%06x\n", data.length(), writeStartAddress);
     }
 
     qint16 byteCount = 0;       // number of bytes in next transmision, max 128
@@ -76,8 +79,10 @@ int OpenFFUcontrolOCUhandler::auxEepromWrite(quint8 slaveAddress, quint32 writeS
         if (data.left(byteCount) != auxEepromRead(slaveAddress, writeStartAddress, byteCount)){
                 fprintf(stderr, "OpenFFUcontrollerOCUhandler::auxEepromWrite(): EEPROM data read back does NOT match data sent.\n");
                 return -1;
+        } else {
+            fprintf(stdout, "Write success at 0x%06x, data: %s\n", writeStartAddress, data.left(byteCount).toHex().data());
+            writeStartAddress += byteCount;
         }
-
         data.remove(0, byteCount);
     }
 
@@ -122,6 +127,7 @@ QByteArray OpenFFUcontrolOCUhandler::auxEepromRead(quint8 slaveAddress, quint32 
 
 int OpenFFUcontrolOCUhandler::intFlashErase(quint8 slaveAddress)
 {
+    Q_UNUSED(slaveAddress)
     return ModBusTelegram::E_ILLEGAL_FUNCTION;
 }
 
@@ -131,6 +137,9 @@ int OpenFFUcontrolOCUhandler::copyAuxEepromToFlash(quint8 slaveAddress)
     sendRawCommand(slaveAddress, OCU_COPY_EEPROM_TO_FLASH, QByteArray());
 
     if (m_response.exeptionCode == ModBusTelegram::E_ACKNOWLEDGE){
+        fprintf(stderr, "Copy to Flash has started.\n");
+        waitForOCU(slaveAddress);
+        fprintf(stderr, "Copy to Flash has finished.\n");
         return 0;
     }
 
