@@ -368,7 +368,8 @@ OpenFFUcontrolOCUhandler::ocuResponse OpenFFUcontrolOCUhandler::parseOCUResponse
     }
 
     if (response.isEmpty()){
-        fprintf(stderr, "OpenFFUcontrollerOCUhandler::parseOCUResponse(): got empty response to parse\n");
+        if (isDebug)
+            fprintf(stdout, "OpenFFUcontrollerOCUhandler::parseOCUResponse(): got empty response to parse\n");
         parsed.exeptionCode = E_PARSER_FAILED;
         return parsed;
     }
@@ -419,7 +420,7 @@ void OpenFFUcontrolOCUhandler::waitForOCU(quint8 slaveAddress)
 {
     fprintf(stdout, "Waiting for OCU.");
     while(systemBusy(slaveAddress)){
-        QThread::msleep(500);
+        QThread::msleep(2000);
         fprintf(stdout, ".");
     }
     fprintf(stdout, "\nOCU ready.\n");
