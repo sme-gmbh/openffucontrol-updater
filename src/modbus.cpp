@@ -17,7 +17,7 @@ ModBus::ModBus(QObject *parent, QString interface, bool debug) : QObject(parent)
 
     // This timer notifies about a telegram timeout if a unit does not answer
     m_requestTimer.setSingleShot(true);
-    m_requestTimer.setInterval(200);  // was 200
+    m_requestTimer.setInterval(5000);  // was 200
     connect(&m_requestTimer, SIGNAL(timeout()), this, SLOT(slot_requestTimer_fired()));
 
     // This timer delays tx after rx to wait for line clearance
@@ -61,6 +61,8 @@ bool ModBus::open(qint32 baudrate)
     bool openOK = m_port->open(QIODevice::ReadWrite);
     m_port->setBreakEnabled(false);
     m_port->setTextModeEnabled(false);
+
+//    QThread::msleep(10000);
 
     return openOK;
 }
@@ -519,10 +521,10 @@ void ModBus::slot_requestTimer_fired()
     {
         emit signal_transactionLost(m_currentTelegram->getID());
     }
-    else
-    {
+//    else
+//    {
         emit signal_transactionFinished();
-    }
+//    }
 }
 
 void ModBus::slot_rxIdleTimer_fired()

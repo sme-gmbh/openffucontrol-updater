@@ -420,8 +420,9 @@ void OpenFFUcontrolOCUhandler::waitForOCU(quint8 slaveAddress)
 {
     fprintf(stdout, "Waiting for OCU.");
     while(systemBusy(slaveAddress)){
-        QThread::msleep(2000);
+        QThread::msleep(300);
         fprintf(stdout, ".");
+        fflush(stdout);
     }
     fprintf(stdout, "\nOCU ready.\n");
 }
