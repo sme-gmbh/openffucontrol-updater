@@ -21,7 +21,7 @@ private:
     OpenFFUcontrolOCUhandler* m_ocuHandler;
 
     // set by commandline arguments
-    quint16 m_baudRate = 9600;
+    qint32 m_baudRate = 9600;
     quint8 m_functionCode = 0;
     bool m_isDryRun = false;
     QString m_modbusInterface;

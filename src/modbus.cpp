@@ -52,7 +52,9 @@ bool ModBus::open(qint32 baudrate)
         fprintf(stdout, "DEBUG ModBus::open().\n");
         fflush(stdout);
     }
-    m_port->setBaudRate(QSerialPort::Baud115200);
+
+    m_port->setBaudRate(baudrate);
+
     m_port->setDataBits(QSerialPort::Data8);
     m_port->setParity(QSerialPort::NoParity);
     m_port->setStopBits(QSerialPort::TwoStop);

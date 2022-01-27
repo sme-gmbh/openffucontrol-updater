@@ -101,7 +101,7 @@ void MainController::parseArguments(QStringList arguments)
        // Process the actual command line arguments given by the user
        parser.process(arguments);
 
-       m_baudRate = parser.value("baud").toShort();
+       m_baudRate = parser.value("baud").toInt();
        m_functionCode = parser.value("functionCode").toUInt();
        m_isDryRun = parser.isSet("dry-run");
        m_pathToHexfile = parser.value("hexfile");
