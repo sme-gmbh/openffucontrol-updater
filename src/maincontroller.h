@@ -4,9 +4,9 @@
 #include <QCommandLineParser>
 #include <QDebug>
 #include <QObject>
+#include <libopenffucontrol-qtmodbus/modbus.h>
 
 #include "intelhexparser.h"
-#include "modbus.h"
 #include "openffucontrolocuhandler.h"
 
 class MainController : public QObject

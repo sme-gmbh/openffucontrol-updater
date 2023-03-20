@@ -2,6 +2,7 @@
 
 OpenFFUcontrolOCUhandler::OpenFFUcontrolOCUhandler(QObject *parent, ModBus *modbus, bool dryRun, bool debug)
 {
+    Q_UNUSED(parent)
     m_modbus = modbus;
     isDryRun = dryRun;
     isDebug = debug;

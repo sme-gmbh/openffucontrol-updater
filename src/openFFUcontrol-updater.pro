@@ -1,5 +1,5 @@
 QT -= gui
-QT += serialport testlib
+#QT += serialport testlib
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -26,17 +26,13 @@ SOURCES += \
         intelhexparser.cpp \
         main.cpp \
         maincontroller.cpp \
-        modbus.cpp \
-        modbustelegram.cpp \
         openffucontrolocuhandler.cpp
 
-//LIBS     += -lmodbus
+LIBS     += -lopenffucontrol-qtmodbus
 
 HEADERS += \
     intelhexparser.h \
     maincontroller.h \
-    modbus.h \
-    modbustelegram.h \
     openffucontrolocuhandler.h
 
 
@@ -57,29 +53,29 @@ linux-aarch64*: QMAKE_TARGET.arch = aarch64
 unix {
     equals(QMAKE_TARGET.arch , x86_64): {
         message("Configured for x86_64")
-        message("Using libftdi1")
-        LIBS +=  -lftdi1
-        DEFINES += USE_LIBFTDI1
+#        message("Using libftdi1")
+#        LIBS +=  -lftdi1
+#        DEFINES += USE_LIBFTDI1
     }
 
     equals(QMAKE_TARGET.arch , x86): {
         message("Configured for x86")
-        message("Using libftdi1")
-        LIBS +=  -lftdi1
-        DEFINES += USE_LIBFTDI1
+#        message("Using libftdi1")
+#        LIBS +=  -lftdi1
+#        DEFINES += USE_LIBFTDI1
     }
 
     equals(QMAKE_TARGET.arch , armv6l): {
         message("Configured for armv6l")
-        message("Using libftdi")
-        LIBS +=  -lftdi
-        DEFINES += USE_LIBFTDI
+#        message("Using libftdi")
+#        LIBS +=  -lftdi
+#        DEFINES += USE_LIBFTDI
     }
 
     equals(QMAKE_TARGET.arch , armv7l): {
         message("Configured for armv7l")
-        message("Using libftdi")
-        LIBS +=  -lftdi
-        DEFINES += USE_LIBFTDI
+#        message("Using libftdi")
+#        LIBS +=  -lftdi
+#        DEFINES += USE_LIBFTDI
     }
 }

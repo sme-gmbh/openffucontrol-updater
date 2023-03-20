@@ -3,8 +3,7 @@
 
 #include <QObject>
 #include <QThread>
-
-#include "modbus.h"
+#include <libopenffucontrol-qtmodbus/modbus.h>
 
 class OpenFFUcontrolOCUhandler : public QObject
 {
