@@ -16,6 +16,25 @@ quint8 OpenFFUcontrolOCUhandler::sendRawCommand(quint8 slaveAddress, quint16 fun
     return m_response.exeptionCode;
 }
 
+bool OpenFFUcontrolOCUhandler::resetApplicationToBootloader(quint8 slaveAddress)
+{
+    QByteArray payload;
+    payload.append((char)0x00);
+    payload.append((char)0x00);
+    payload.append((char)0xFF);
+    payload.append((char)0x00);
+    sendRawCommand(slaveAddress, OCU_WRITE_COIL, payload);
+
+    if (m_response.exeptionCode != ModBusTelegram::E_ACKNOWLEDGE){
+        fprintf(stderr, "OpenFFUcontrollOCUhandler::resetApplicationToBootloader() failed: %s\n", errorString(m_response.exeptionCode).toLocal8Bit().data());
+        return false;
+    }
+
+    waitForOCU(slaveAddress);
+
+    return true;
+}
+
 bool OpenFFUcontrolOCUhandler::auxEepromErase(quint8 slaveAddress)
 {
     //QByteArray request = createRequest(slaveAddress, OCU_AUX_EEPROM_ERASE);

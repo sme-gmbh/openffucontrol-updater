@@ -30,6 +30,7 @@ private:
     bool m_directDataSend = false;
     quint8 m_slaveId = 0;
     QString m_deviceType;
+    bool m_reset = false;           // reset application to bootloader
     bool m_update = false;
     bool m_erase = false;           // memory erase
     bool m_copy = false;            // memory copy

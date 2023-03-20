@@ -15,6 +15,7 @@ public:
     quint8 sendRawCommand(quint8 slaveAddress, quint16 functonCode, QByteArray payload);
 
     // OCU Commands
+    bool resetApplicationToBootloader(quint8 slaveAddress);
 
     // auxiliary EEPROM options
     bool auxEepromErase(quint8 slaveAddress);
@@ -42,6 +43,7 @@ public:
 private:
 
     typedef enum {  // OCU function codes
+        OCU_WRITE_COIL = 5,
         OCU_AUX_EEPROM_ERASE= 65,
         OCU_AUX_EEPROM_WRITE = 66,
         OCU_AUX_EEPROM_READ  = 67,

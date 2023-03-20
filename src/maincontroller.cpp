@@ -31,6 +31,10 @@ void MainController::parseArguments(QStringList arguments)
                                  QCoreApplication::translate("main", "function code sent to slaveID as uint8"),
                                  QCoreApplication::translate("main", "function code")
                              },
+                             // reset application to bootloader
+                             {"reset",
+                                 QCoreApplication::translate("main", "reset running application to bootloader"),
+                             },
                              // copy aux EEPROM to Flash
                              {"copy",
                                  QCoreApplication::translate("main", "copy aux EEPROM to Flash"),
@@ -110,6 +114,7 @@ void MainController::parseArguments(QStringList arguments)
        m_directDataSend = parser.isSet("direct-command");
        m_slaveId = parser.value("slave").toUInt();
        m_deviceType = parser.value("type");
+       m_reset = parser.isSet("reset");
        m_update = parser.isSet("update");
        m_erase = parser.isSet("erase");
        m_copy = parser.isSet("copy");
@@ -137,6 +142,10 @@ void MainController::executeArguments()
 
     if (m_deviceType == "OCU" || m_deviceType.isEmpty()){       // Performe operations for device type OCU
         m_ocuHandler = new OpenFFUcontrolOCUhandler(this, m_modbus, m_isDryRun, m_debug);
+        if (m_reset){
+            fprintf(stdout, " --- Resetting application to bootloader ---\n\n");
+            m_ocuHandler->resetApplicationToBootloader(m_slaveId);
+        }
         if (m_update){
             fprintf(stdout, " --- Starting OCU Update ---\n\n");
             if (m_pathToHexfile.isEmpty()){
